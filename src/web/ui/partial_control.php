@@ -19,11 +19,6 @@
 namespace Reed\Web\UI;
 
 use Reed\Core\IObject;
-use Reed\MVC\TActionInfo;
-use Reed\MVC\TCustomView;
-use Reed\MVC\TModel;
-use Reed\Registry\TRegistry;
-use Reed\Web\TWebObject;
 use Reed\TAutoloader;
 
 class TPartialControl extends TCustomCachedControl

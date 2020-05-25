@@ -15,37 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
- 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 namespace Reed\Web;
 
-use Reed\Core\IObject;
+use Reed\Auth\TAuthentication;
+use Reed\Web\TRequest;
+use Reed\Web\TResponse;
 
- /**
- * Description of TObject
+/**
+ * Description of httpTransport
  *
- * @author david
+ * @author David
  */
- 
+trait THttpTransport
+{
+    //put your code here
+    protected $request = null;
+    protected $response = null;
+    protected $authentication = null;
 
- interface IWebObject extends IHttpTransport, IObject {
- 
-    public function getCacheFileName();
-    public function getJsCacheFileName();
-    public function getCssCacheFileName();
-    public function getClassName();
-    public function getActionName();
-    public function getModelFileName();
-    public function getViewFileName();
-    public function getControllerFileName();
-    public function getJsControllerFileName();
-    public function getCssFileName();
-    public function getViewName();
-    public function getParameters();
-    
-    
+    public function getRequest()
+    {
+        return $this->request;
+    }
+
+    public function getResponse()
+    {
+        return $this->response;
+    }
 }

@@ -19,11 +19,6 @@
 namespace Reed\Web\UI;
 
 use Reed\Core\IObject;
-use Reed\MVC\TActionInfo;
-use Reed\MVC\TCustomView;
-use Reed\MVC\TModel;
-use Reed\Registry\TRegistry;
-use Reed\Web\TWebObject;
 use Reed\TAutoloader;
 
 class TControl extends TCustomCachedControl
@@ -39,7 +34,6 @@ class TControl extends TCustomCachedControl
         $this->className = $this->getType();
         $this->viewName = $this->view->getViewName();
 
-        //$this->setViewName($this->className);
         $this->setNames();
         
         $this->getCacheFileName();

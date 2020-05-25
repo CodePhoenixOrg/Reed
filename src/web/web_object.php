@@ -25,7 +25,6 @@ namespace Reed\Web;
  */
 
 use Reed\Cache\TCache;
-use Reed\Core\TCustomApplication;
 use Reed\MVC\TCustomView;
 use Reed\Registry\TRegistry;
 use Reed\TAutoloader;
@@ -258,11 +257,6 @@ JSCRIPT;
     public function getCssFileName(): string
     {
         return $this->cssFileName;
-    }
-
-    public function getApplication(): TCustomApplication
-    {
-        return $this->application;
     }
 
     public function getParameters(): array
@@ -513,9 +507,7 @@ JSCRIPT;
     {
         $this->path = $parent->getPath();
         $this->dirName = $parent->getDirName();
-        $this->application = $parent->getApplication();
         $this->authentication = $parent->getAuthentication();
-        $this->application = $parent->getApplication();
 
         $this->commands = $this->application->getCommands();
         $this->parameters = $parent->getParameters();

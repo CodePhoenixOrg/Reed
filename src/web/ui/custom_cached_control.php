@@ -20,12 +20,8 @@ namespace Reed\Web\UI;
 
 use Reed\Cache\TCache;
 use Reed\Core\IObject;
-use Reed\MVC\TActionInfo;
 use Reed\MVC\TCustomView;
-use Reed\MVC\TModel;
 use Reed\Registry\TRegistry;
-use Reed\Web\TWebObject;
-use Reed\TAutoloader;
 
 /**
  * Description of custom_control
@@ -142,9 +138,9 @@ abstract class TCustomCachedControl extends TCustomControl
 
                 $params = $this->validate($actionName);
                 $actionInfo = $this->invoke($actionName, $params);
-                if ($actionInfo instanceof TActionInfo) {
-                    $this->response->setData($actionInfo->getData());
-                }
+                // if ($actionInfo instanceof TActionInfo) {
+                //     $this->response->setData($actionInfo->getData());
+                // }
 
                 $this->beforeBinding();
                 $this->declareObjects();
