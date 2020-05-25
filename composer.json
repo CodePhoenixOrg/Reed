@@ -1,5 +1,5 @@
 {
-    "name": "reed/reed",
+    "name": "phink/reed",
     "type": "library",
     "description": "An XML-like PHP template engine",
     "homepage": "https://code-phoenix.org",
