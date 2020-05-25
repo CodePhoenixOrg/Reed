@@ -1,4 +1,16 @@
 {
+    "name": "reed/reed",
+    "type": "library",
+    "description": "An XML-like PHP template engine",
+    "homepage": "https://code-phoenix.org",
+    "license": "GPL-3.0+",
+    "authors": [
+        {
+            "name": "David Blanchard",
+            "email": "dblanchard1@bbox.fr",
+            "role": "Creator"
+        }
+    ],
     "autoload": {
         "classmap": [
             "src/"
