@@ -16,7 +16,8 @@
             "src/"
         ],
         "exclude-from-classmap": [
-            "src/core/autoloader.php"
+            "src/core/autoloader.php",
+            "src/autoloader.php"
         ],
         "psr-4": {
             "Reed\\": ""
