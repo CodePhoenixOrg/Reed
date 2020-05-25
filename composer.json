@@ -1,0 +1,19 @@
+{
+    "autoload": {
+        "classmap": [
+            "src/"
+        ],
+        "exclude-from-classmap": [
+            "src/core/autoloader.php"
+        ],
+        "psr-4": {
+            "Reed\\": ""
+        },
+        "files": [
+            "src/core/constants.php"
+        ]
+    },
+    "require": {
+        "phpunit/phpunit": "^8.5"
+    }
+}
