@@ -16,18 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Phink\MVC;
+namespace Reed\MVC;
 
-use Phink\Cache\TCache;
-use Phink\Registry\TRegistry;
-use Phink\TAutoloader;
-use Phink\Web\IWebObject;
-use Phink\Web\UI\TCustomControl;
-use Phink\Xml\TXmlDocument;
+use Reed\Cache\TCache;
+use Reed\Registry\TRegistry;
+use Reed\TAutoloader;
+use Reed\Web\IWebObject;
+use Reed\Web\UI\TCustomControl;
+use Reed\Xml\TXmlDocument;
 
 abstract class TCustomView extends TCustomControl
 {
-    use \Phink\Web\UI\TCodeGenerator {
+    use \Reed\Web\UI\TCodeGenerator {
         writeDeclarations as private;
         writeHTML as private;
     }
@@ -180,7 +180,7 @@ abstract class TCustomView extends TCustomControl
                 } else {
                     $path = SITE_ROOT . $this->getPath();
                 }
-                self::$logger->debug('PARSE PHINK VIEW : ' . $path, __FILE__, __LINE__);
+                self::$logger->debug('PARSE Reed VIEW : ' . $path, __FILE__, __LINE__);
 
                 $this->viewHtml = file_get_contents($path);
 
@@ -189,7 +189,7 @@ abstract class TCustomView extends TCustomControl
             break;
         }
         // else {
-        //     self::$logger->debug('PARSE PHINK PLUGIN : ' . $this->getPath(), __FILE__, __LINE__);
+        //     self::$logger->debug('PARSE Reed PLUGIN : ' . $this->getPath(), __FILE__, __LINE__);
 
         //     $this->viewHtml = file_get_contents(SITE_ROOT . $this->viewFileName, FILE_USE_INCLUDE_PATH);
         // }

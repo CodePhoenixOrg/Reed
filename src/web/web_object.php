@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Phink\Web;
+namespace Reed\Web;
 
 /**
  * Description of TObject
@@ -24,11 +24,11 @@ namespace Phink\Web;
  * @author david
  */
 
-use Phink\Cache\TCache;
-use Phink\Core\TCustomApplication;
-use Phink\MVC\TCustomView;
-use Phink\Registry\TRegistry;
-use Phink\TAutoloader;
+use Reed\Cache\TCache;
+use Reed\Core\TCustomApplication;
+use Reed\MVC\TCustomView;
+use Reed\Registry\TRegistry;
+use Reed\TAutoloader;
 
 trait TWebObject
 {
@@ -359,7 +359,7 @@ JSCRIPT;
         $this->namespace = $this->getFileNamespace();
 
         if (!isset($this->namespace)) {
-            $this->namespace = \Phink\TAutoloader::getDefaultNamespace();
+            $this->namespace = \Reed\TAutoloader::getDefaultNamespace();
         }
     }
 
@@ -394,23 +394,23 @@ JSCRIPT;
         if (!file_exists(SITE_ROOT . $this->viewFileName) && !file_exists(SRC_ROOT . $this->viewFileName)) {
             $info = TRegistry::classInfo($this->className);
             if ($info !== null) {
-                // $this->viewName = \Phink\TAutoloader::classNameToFilename($this->className);
+                // $this->viewName = \Reed\TAutoloader::classNameToFilename($this->className);
                 if ($info->path[0] == '@') {
-                    $path = str_replace("@" . DIRECTORY_SEPARATOR, PHINK_VENDOR_APPS, $info->path) . 'app' . DIRECTORY_SEPARATOR;
+                    $path = str_replace("@" . DIRECTORY_SEPARATOR, Reed_VENDOR_APPS, $info->path) . 'app' . DIRECTORY_SEPARATOR;
                     $this->controllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $this->viewName . CLASS_EXTENSION;
                     $this->jsControllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $this->viewName . JS_EXTENSION;
                     $this->cssFileName = $path . 'views' . DIRECTORY_SEPARATOR . $this->viewName . CSS_EXTENSION;
                     $this->viewFileName = $path . 'views' . DIRECTORY_SEPARATOR . $this->viewName . PREHTML_EXTENSION;
                 } else if ($info->path[0] == '~') {
-                    $path = str_replace("~" . DIRECTORY_SEPARATOR, PHINK_VENDOR_WIDGETS, $info->path) . DIRECTORY_SEPARATOR;
+                    $path = str_replace("~" . DIRECTORY_SEPARATOR, Reed_VENDOR_WIDGETS, $info->path) . DIRECTORY_SEPARATOR;
                     $this->controllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $this->viewName . CLASS_EXTENSION;
                     $this->jsControllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $this->viewName . JS_EXTENSION;
                     $this->cssFileName = $path . 'views' . DIRECTORY_SEPARATOR . $this->viewName . CSS_EXTENSION;
                     $this->viewFileName = $path . 'views' . DIRECTORY_SEPARATOR . $this->viewName . PREHTML_EXTENSION;
                 } else {
-                    $this->viewName = \Phink\TAutoloader::innerClassNameToFilename($this->className);
+                    $this->viewName = \Reed\TAutoloader::innerClassNameToFilename($this->className);
 
-                    $path = PHINK_VENDOR_LIB . $info->path;
+                    $path = Reed_VENDOR_LIB . $info->path;
                     $this->controllerFileName = $path . $this->viewName . CLASS_EXTENSION;
                     $this->jsControllerFileName = $path . $this->viewName . JS_EXTENSION;
                     $this->cssFileName = $path . $this->viewName . CSS_EXTENSION;
@@ -460,17 +460,17 @@ JSCRIPT;
         if (!file_exists(SITE_ROOT . $viewFileName) && !file_exists(SRC_ROOT . $viewFileName)) {
             $info = TRegistry::classInfo($typeName);
             if ($info !== null) {
-                $viewName = \Phink\TAutoloader::innerClassNameToFilename($typeName);
+                $viewName = \Reed\TAutoloader::innerClassNameToFilename($typeName);
 
                 if ($info->path[0] == '@') {
-                    $path = str_replace("@" . DIRECTORY_SEPARATOR, PHINK_VENDOR_APPS, $info->path) . 'app' . DIRECTORY_SEPARATOR;
+                    $path = str_replace("@" . DIRECTORY_SEPARATOR, Reed_VENDOR_APPS, $info->path) . 'app' . DIRECTORY_SEPARATOR;
                     $controllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $viewName . CLASS_EXTENSION;
                     $jsControllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $viewName . JS_EXTENSION;
                     $cssFileName = $path . 'views' . DIRECTORY_SEPARATOR . $viewName . CSS_EXTENSION;
                     $viewFileName = $path . 'views' . DIRECTORY_SEPARATOR . $viewName . PREHTML_EXTENSION;
                 } else {
 
-                    $path = PHINK_VENDOR_LIB . $info->path;
+                    $path = Reed_VENDOR_LIB . $info->path;
                     $controllerFileName = $path . $viewName . CLASS_EXTENSION;
                     $jsControllerFileName = $path . $viewName . JS_EXTENSION;
                     $cssFileName = $path . $viewName . CSS_EXTENSION;

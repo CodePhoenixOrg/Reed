@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Phink\Xml;
+namespace Reed\Xml;
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
 
-use Phink\Core\TObject;
+use Reed\Core\TObject;
 
 /**
  * Description of match

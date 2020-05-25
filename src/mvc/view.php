@@ -21,10 +21,10 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-namespace Phink\MVC;
+namespace Reed\MVC;
 
-use \Phink\Core\TRouter;
-use Phink\Registry\TRegistry;
+use \Reed\Core\TRouter;
+use Reed\Registry\TRegistry;
 
 /**
  * Description of view
@@ -33,7 +33,7 @@ use Phink\Registry\TRegistry;
  */
 class TView extends TCustomView
 {
-    public function __construct(\Phink\Web\IWebObject $parent)
+    public function __construct(\Reed\Web\IWebObject $parent)
     {
         parent::__construct($parent);
         

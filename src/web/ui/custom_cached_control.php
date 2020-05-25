@@ -16,16 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Phink\Web\UI;
+namespace Reed\Web\UI;
 
-use Phink\Cache\TCache;
-use Phink\Core\IObject;
-use Phink\MVC\TActionInfo;
-use Phink\MVC\TCustomView;
-use Phink\MVC\TModel;
-use Phink\Registry\TRegistry;
-use Phink\Web\TWebObject;
-use Phink\TAutoloader;
+use Reed\Cache\TCache;
+use Reed\Core\IObject;
+use Reed\MVC\TActionInfo;
+use Reed\MVC\TCustomView;
+use Reed\MVC\TModel;
+use Reed\Registry\TRegistry;
+use Reed\Web\TWebObject;
+use Reed\TAutoloader;
 
 /**
  * Description of custom_control

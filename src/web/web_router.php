@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Phink\Web;
+namespace Reed\Web;
 
-use Phink\Core\TRouter;
-use Phink\MVC\TCustomView;
-use Phink\Registry\TRegistry;
-use Phink\TAutoloader;
-use Phink\MVC\TView;
+use Reed\Core\TRouter;
+use Reed\MVC\TCustomView;
+use Reed\Registry\TRegistry;
+use Reed\TAutoloader;
+use Reed\MVC\TView;
 
 /**
  * Description of router

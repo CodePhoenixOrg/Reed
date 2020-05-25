@@ -23,7 +23,7 @@
  * and open the template in the editor.
  */
 
-namespace Phink\Xml;
+namespace Reed\Xml;
 
 /**
  * Description of xml

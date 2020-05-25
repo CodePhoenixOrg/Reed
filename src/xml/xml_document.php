@@ -23,9 +23,9 @@
 
 */
 
-namespace Phink\Xml;
+namespace Reed\Xml;
 
-use Phink\Core\TObject;
+use Reed\Core\TObject;
 
 /**
  * Description of axmldocument

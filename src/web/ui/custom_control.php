@@ -16,12 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Phink\Web\UI;
+namespace Reed\Web\UI;
 
-use Phink\Core\IObject;
-use Phink\Core\TObject;
-use Phink\Web\IHttpTransport;
-use Phink\Web\IWebObject;
+use Reed\Core\IObject;
+use Reed\Core\TObject;
+use Reed\Web\IHttpTransport;
+use Reed\Web\IWebObject;
 
 /**
  * Description of custom_control
@@ -30,7 +30,7 @@ use Phink\Web\IWebObject;
  */
 abstract class TCustomControl extends TObject implements IHttpTransport, IWebObject
 {
-    use \Phink\Web\TWebObject;
+    use \Reed\Web\TWebObject;
 
     public function __construct(IObject $parent)
     {

@@ -16,10 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
  
-namespace Phink\MVC;
+namespace Reed\MVC;
 
-use Phink\Web\IWebObject;
-use Phink\Web\UI\TCustomControl;
+use Reed\Web\IWebObject;
+use Reed\Web\UI\TCustomControl;
 
 abstract class TCustomController extends TCustomControl
 {
@@ -53,11 +53,6 @@ abstract class TCustomController extends TCustomControl
     public function getView() : ?TCustomView
     {
         return $this->view;
-    }
-    
-    public function getModel() : ?TModel
-    {
-        return $this->model;
     }
     
     public function parse() : bool

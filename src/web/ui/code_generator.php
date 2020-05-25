@@ -16,15 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Phink\Web\UI;
+namespace Reed\Web\UI;
 
-use Phink\Cache\TCache;
-use Phink\Registry\TRegistry;
-use Phink\Xml\TXmlDocument;
-use Phink\Xml\TXmlMatch;
-use Phink\MVC\TCustomView;
-use Phink\MVC\TPartialView;
-use \Phink\TAutoloader;
+use Reed\Cache\TCache;
+use Reed\Registry\TRegistry;
+use Reed\Xml\TXmlDocument;
+use Reed\Xml\TXmlMatch;
+use Reed\MVC\TCustomView;
+use Reed\MVC\TPartialView;
+use \Reed\TAutoloader;
 
 /**
  * Description of code_generator
@@ -96,7 +96,7 @@ trait TCodeGenerator
                 //self::$logger->dump('REGISTRY INFO ' . $className, $info);
                 if ($info) {
                     if (!$info->isAutoloaded) {
-                        array_push($requires, '\\Phink\\TAutoloader::import($this, "' . $className . '");');
+                        array_push($requires, '\\Reed\\TAutoloader::import($this, "' . $className . '");');
                         //                        array_push($requires, '$this->import("' . $className . '");');
                     }
                     $fqcn = $info->namespace . '\\' . $className;
@@ -108,7 +108,7 @@ trait TCodeGenerator
                     $fullJsClassPath = $view->getJsControllerFileName();
 
                     $fullJsCachePath = TCache::cacheJsFilenameFromView($viewName, $parentView->isInternalComponent());
-                    array_push($requires, '\\Phink\\TAutoloader::import($this, "' . $className . '");');
+                    array_push($requires, '\\Reed\\TAutoloader::import($this, "' . $className . '");');
 
                     self::getLogger()->dump('FULL_CLASS_PATH', $fullClassPath);
 
@@ -153,7 +153,7 @@ trait TCodeGenerator
                 foreach ($properties as $key => $value) {
                     if ($key == 'id') {
                         if ($serialize) {
-                            array_push($creations[$j], 'if(!' . $thisControl . ' = \Phink\Core\TObject::wakeUp("' . $value . '")) {');
+                            array_push($creations[$j], 'if(!' . $thisControl . ' = \Reed\Core\TObject::wakeUp("' . $value . '")) {');
                         }
                         if ($notThis) {
                             array_push($creations[$j], $thisControl . ' = new \\' . $fqcn . '($this); ');
@@ -205,7 +205,7 @@ trait TCodeGenerator
                 array_push($additions[$j], '$this->addChild(' . $thisControl . ');');
                 if($canRender && $className !== 'this') {
                     array_push($additions[$j], '$html = ' .  $thisControl . '->getHtml();');
-                    array_push($additions[$j], '\\Phink\\Registry\\TRegistry::push("' . $uid . '", "' . $controlId . '", $html);');
+                    array_push($additions[$j], '\\Reed\\Registry\\TRegistry::push("' . $uid . '", "' . $controlId . '", $html);');
                 }
 
                 $creations[$j] = implode(PHP_EOL, $creations[$j]);
@@ -308,7 +308,7 @@ trait TCodeGenerator
                     $declare = '<?php $this->renderHtml(); $this->renderedHtml(); ?>';
                 } else {
                     /** $declare = '<?php ' . $type . $id . '->render(); ?>'; */
-                    $declare = '<?php echo \\Phink\\Registry\\TRegistry::read("' . $uid . '", "' . $id . '")[0]; ?>';
+                    $declare = '<?php echo \\Reed\\Registry\\TRegistry::read("' . $uid . '", "' . $id . '")[0]; ?>';
                 }
             }
 

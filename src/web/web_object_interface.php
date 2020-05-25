@@ -21,9 +21,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-namespace Phink\Web;
+namespace Reed\Web;
 
-use Phink\Core\IObject;
+use Reed\Core\IObject;
 
  /**
  * Description of TObject
