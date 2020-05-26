@@ -25,7 +25,6 @@ namespace Reed\Web;
  */
 interface IHttpTransport
 {
-    public function getAuthentication();
     public function getRequest();
     public function getResponse();
 }

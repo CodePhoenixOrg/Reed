@@ -39,7 +39,6 @@ use Reed\Core\IObject;
     public function getCssCacheFileName();
     public function getClassName();
     public function getActionName();
-    public function getModelFileName();
     public function getViewFileName();
     public function getControllerFileName();
     public function getJsControllerFileName();

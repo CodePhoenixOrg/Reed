@@ -19,14 +19,13 @@
 namespace Reed\Core;
 
 use Exception;
-use Phink\Web\IWebObject;
 use Reed\Web\TWebObject;
+use Reed\Web\UI\TCustomControl;
 
-class TTemplateEngine extends TWebObject implements IWebObject
+class TTemplateEngine extends TCustomControl
 {
 
     use TWebObject;
-    protected $loader = '';
     protected $templateContents = '';
 
 
@@ -37,16 +36,19 @@ class TTemplateEngine extends TWebObject implements IWebObject
 
     public function __construct(TTemplateLoader $loader)
     {
-        $this->loader = $loader;
+
+        $this->path = $loader->getTemplatePath();
+        $this->componentIsInternal = $loader->isInnerTemplate();
+        $this->isAJAX = $loader->isClientTemplate();
+        $this->isPartial = $loader->isPartialTemplate();
+        $this->test('home.phtml');
+
     }
 
-    private function load(): void
+    public function test(string $templateName): void
     {
-        if (!file_exists(SITE_ROOT . $this->templatePath)) {
-            throw new Exception('No template can be found on path ' . $this->templatePath . '.');
-        }
 
-        
+
         $info = (object) \pathinfo($this->path);
         $this->viewName = $info->filename;
         $this->dirName = $info->dirname;

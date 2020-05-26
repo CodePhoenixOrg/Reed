@@ -40,7 +40,7 @@ class TRegistry extends TStaticObject
             return true;
         }
 
-        self::importClasses(Reed_VENDOR_WIDGETS);
+        self::importClasses(PHINK_VENDOR_WIDGETS);
 
         self::write(
             'classes',
