@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2019 David Blanchard
+ * Copyright (C) 2020 David Blanchard
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,11 +33,6 @@ trait TWebObject
 {
     use THttpTransport;
 
-    private static $_currentDirectory;
-    private static $_currentFilePath;
-    private static $_currentClassName;
-    private static $_currentNamespace;
-    private static $_sqlConfigurationFileName;
     private static $_pageNumber;
     private static $_pageCount;
     protected $redis = null;
@@ -62,29 +57,11 @@ trait TWebObject
     protected $application = null;
     protected $componentIsInternal = false;
     protected $path = '';
-    protected $twigEnvironment = null;
+    protected $reedEngine = null;
     protected $parentView = null;
     protected $parentType = null;
     protected $motherView = null;
     protected $motherUID = '';
-
-    public static function pageNumber($value = null)
-    {
-        if (isset($value)) {
-            self::$_pageNumber = $value;
-        } else {
-            return self::$_pageNumber;
-        }
-    }
-
-    public static function pageCount($value = null)
-    {
-        if (isset($value)) {
-            self::$_pageCount = $value;
-        } else {
-            return self::$_pageCount;
-        }
-    }
 
     public function appendJsToBody(string $viewName): void
     {
@@ -121,20 +98,6 @@ JSCRIPT;
         if ($this->getRequest()->isAJAX()) {
             $this->response->addScript($script);
         }
-    }
-
-    public function pageCountByDefault($default)
-    {
-        self::pageCount($this->request->getQueryArguments(PAGE_COUNT));
-        if (!self::pageCount()) {
-            self::pageCount($default);
-        }
-
-        if ($default < 1) {
-            self::pageCount(PAGE_COUNT_ZERO);
-        }
-
-        return self::pageCount();
     }
 
     public function getCacheFileName(?string $viewName = null): string
@@ -185,10 +148,6 @@ JSCRIPT;
         return $this->parentType;
     }
 
-    public function getAuthentication()
-    {
-        return $this->authentication;
-    }
 
     public function setRedis(array $params): void
     {
@@ -316,28 +275,28 @@ JSCRIPT;
         }
     }
 
-    public function getTwigEnvironment()
+    public function getReedEnginge()
     {
-        return $this->twigEnvironment;
+        return $this->reedEngine;
     }
 
-    public function renderTwig(array $dictionary = []): string
+    public function renderTemplate(array $dictionary = []): string
     {
         $result = '';
 
-        if ($this->getTwigEnvironment() !== null) {
-            $result = $this->getTwigEnvironment()->render($this->getViewName() . PREHTML_EXTENSION, $dictionary);
+        if ($this->getReedEnginge() !== null) {
+            $result = $this->getReedEnginge()->render($this->getViewName() . PREHTML_EXTENSION, $dictionary);
         }
 
         return $result;
     }
 
-    public function renderTwigByName(string $viewName, array $dictionary = []): string
+    public function renderTemplateByName(string $viewName, array $dictionary = []): string
     {
         $result = '';
 
-        if ($this->getTwigEnvironment() !== null) {
-            $result = $this->getTwigEnvironment()->render($viewName, $dictionary);
+        if ($this->getReedEnginge() !== null) {
+            $result = $this->getReedEnginge()->render($viewName, $dictionary);
         }
 
         return $result;
@@ -464,7 +423,7 @@ JSCRIPT;
                     $viewFileName = $path . 'views' . DIRECTORY_SEPARATOR . $viewName . PREHTML_EXTENSION;
                 } else {
 
-                    $path = Reed_VENDOR_LIB . $info->path;
+                    $path = PHINK_VENDOR_LIB . $info->path;
                     $controllerFileName = $path . $viewName . CLASS_EXTENSION;
                     $jsControllerFileName = $path . $viewName . JS_EXTENSION;
                     $cssFileName = $path . $viewName . CSS_EXTENSION;

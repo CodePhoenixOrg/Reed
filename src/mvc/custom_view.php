@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2019 David Blanchard
+ * Copyright (C) 2020 David Blanchard
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -122,21 +122,6 @@ abstract class TCustomView extends TCustomControl
         return $this->twigHtml;
     }
 
-    function setTwig(array $dictionary): void
-    {
-        $viewName = $this->getViewName() . PREHTML_EXTENSION;
-        $this->setTwigByName($viewName, $dictionary);
-    }
-
-    function setTwigByName(string $viewName, array $dictionary): void
-    {
-        $html = $this->renderTwigByName($viewName, $dictionary);
-        $this->twigHtml = $html;
-
-        $this->engineIsTwig = true;
-        $this->engineIsReed = false;
-    }
-
     function loadView($filename): string
     {
         $lines = file($filename);
@@ -151,11 +136,6 @@ abstract class TCustomView extends TCustomControl
 
     function parse(): bool
     {
-        // self::$logger->debug($this->viewName . ' IS REGISTERED : ' . (TRegistry::exists('code', $this->controllerFileName) ? 'TRUE' : 'FALSE'), __FILE__, __LINE__);
-
-        // $this->viewHtml = $this->redis->mget($templateName);
-        // $this->viewHtml = $this->viewHtml[0];
-
         while (empty($this->getViewHtml())) {
             if (file_exists(SRC_ROOT . $this->viewFileName) && !empty($this->viewFileName)) {
                 self::$logger->debug('PARSE SRC ROOT FILE : ' . $this->viewFileName, __FILE__, __LINE__);
@@ -171,8 +151,6 @@ abstract class TCustomView extends TCustomControl
             }
 
             $viewPath = SITE_ROOT . $this->getDirName() . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->viewName . PREHTML_EXTENSION;
-            // if (file_exists(SITE_ROOT . $this->getPath()) && !empty($this->getPath() && empty($this->viewHtml))) {
-            // if (file_exists(SITE_ROOT . $this->getPath()) && !empty($this->getPath())) {
             if (file_exists($viewPath)) {
                 $path = $this->getPath();
                 if ($path[0] == '@') {
@@ -188,11 +166,6 @@ abstract class TCustomView extends TCustomControl
             }
             break;
         }
-        // else {
-        //     self::$logger->debug('PARSE Reed PLUGIN : ' . $this->getPath(), __FILE__, __LINE__);
-
-        //     $this->viewHtml = file_get_contents(SITE_ROOT . $this->viewFileName, FILE_USE_INCLUDE_PATH);
-        // }
         $head = $this->getStyleSheetTag();
         $script = $this->getScriptTag();
 
@@ -207,26 +180,6 @@ abstract class TCustomView extends TCustomControl
             }
         }
 
-        // if (!$this->isMotherView() && !$this->getRequest()->isAJAX()) {
-        //     $view = $this->getMotherView();
-        //     $uid = $view->getUID();
-
-        //     if (TRegistry::htmlExists($uid)) {
-        //         $html = TRegistry::getHtml($uid);
-
-        //         if ($head !== null) {
-        //             $this->appendToHead($head, $html);
-        //         }
-        //         if ($script !== null) {
-        //             $this->appendToBody($script, $html);
-        //         }
-        //         TRegistry::setHtml($view->getUID(), $html);
-        //     }
-        // }
-
-        // $this->redis->mset($templateName, $this->viewHtml);
-        // self::$logger->debug('HTML VIEW : [' . substr($this->viewHtml, 0, (strlen($this->viewHtml) > 25) ? 25 : strlen($this->viewHtml)) . '...]');
-        // self::$logger->debug('HTML VIEW : <pre>[' . PHP_EOL . htmlentities($this->viewHtml) . PHP_EOL . '...]</pre>');
         $doc = new TXmlDocument($this->viewHtml);
         $doc->matchAll();
 
@@ -273,7 +226,6 @@ abstract class TCustomView extends TCustomControl
         $this->engineIsReed = true;
         // $this->redis->mset($this->preHtmlName, $this->declarations . $this->viewHtml);
 
-        self::register($this);
 
         // We generate the code, but we don't flag it as parsed because it was not "executed"
         return false;
@@ -293,7 +245,6 @@ abstract class TCustomView extends TCustomControl
             $ok = file_exists($dest);
             if (!$ok) {
                 $ok = copy($src, $dest);
-                self::getLogger()->debug("copy(" . $src . ", " . $dest . ")");
             }
         }
 
@@ -326,8 +277,6 @@ abstract class TCustomView extends TCustomControl
         if ($scripts !== '') {
             $scripts .= '</body>' . PHP_EOL;
             $viewHtml = str_replace('</body>', $scripts, $viewHtml);
-            // TRegistry::write($this->getMotherUID(), 'scripts', $scripts);c
-            // $motherView->addScriptTag($scripts);
         }
     }
 
@@ -336,32 +285,7 @@ abstract class TCustomView extends TCustomControl
         if ($head !== '') {
             $head .= '</head>' . PHP_EOL;
             $viewHtml = str_replace('</head>', $head, $viewHtml);
-            // TRegistry::write($this->getMotherUID(), 'linkRel', $head);
-            // $motherView->addLinkRelTag($head);
         }
     }
 
-    function register(IWebObject $object): void
-    {
-        TRegistry::write(
-            $object->getUID(),
-            [
-                "id" => $object->getId(),
-                "name" => $object->getViewName(),
-                "UID" => $object->getUID(),
-                "parentUID" => ($object->getParent() !== null) ? $object->getParent()->getUID() : '',
-                "isMotherView" => ($object->isMotherView()) ? "true" : "false",
-                "view" => $object->getViewFileName(),
-                "controller" => $object->getControllerFileName(),
-                "css" => $object->getCssFileName(),
-                "js" => $object->getJsControllerFileName(),
-                "cache" =>
-                [
-                    "controller" => SRC_ROOT . TCache::cacheFilenameFromView($object->getViewName(), $this->isInternalComponent()),
-                    "css" => SRC_ROOT . TCache::cacheCssFilenameFromView($object->getViewName(), $this->isInternalComponent()),
-                    "js" => SRC_ROOT . TCache::cacheJsFilenameFromView($object->getViewName(), $this->isInternalComponent()),
-                ],
-            ]
-        );
-    }
 }

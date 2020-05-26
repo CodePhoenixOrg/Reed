@@ -16,14 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Reed\Core;
+namespace Phink\Core;
 
-use Reed\Core\TObject;
-use Reed\Registry\TRegistry;
+use Phink\Core\TObject;
+use Phink\Registry\TRegistry;
 
-class TRouter extends TObject implements \Reed\Web\IWebObject
+class TRouter extends TObject implements \Phink\Web\IWebObject
 {
-    use \Reed\Web\TWebObject;
+    use \Phink\Web\TWebObject;
 
     protected $apiName = '';
     protected $baseNamespace = '';
@@ -90,12 +90,12 @@ class TRouter extends TObject implements \Reed\Web\IWebObject
                     $this->translation = $matches;
 
                     $this->componentIsInternal = substr($this->translation, 0, 1) == '@';
-                    $baseurl = parse_url($this->translation);
                     $this->dirName = pathinfo($this->translation, PATHINFO_DIRNAME);
 
+                    $baseurl = parse_url($this->translation);
                     if ($this->componentIsInternal) {
                         $path = substr($baseurl['path'], 2);
-                        $this->path = Reed_VENDOR_APPS . $path;
+                        $this->path = PHINK_VENDOR_APPS . $path;
 
                     } else {
                         $this->path = APP_DIR . $baseurl['path'];
