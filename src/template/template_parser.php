@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Reed\MVC;
+namespace Reed\Template;
 
 use Reed\Cache\TCache;
 use Reed\Registry\TRegistry;
@@ -25,7 +25,7 @@ use Reed\Web\IWebObject;
 use Reed\Web\UI\TCustomControl;
 use Reed\Xml\TXmlDocument;
 
-abstract class TCustomView extends TCustomControl
+abstract class TTemplateParser extends TCustomControl
 {
     use \Reed\Web\UI\TCodeGenerator {
         writeDeclarations as private;

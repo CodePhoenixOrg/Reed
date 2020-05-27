@@ -16,10 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Reed\Core;
+namespace Reed\Template;
 
 use Exception;
 use Reed\Core\ETemplateType;
+use Reed\Core\TObject;
 
 class TTemplateLoader extends TObject
 {

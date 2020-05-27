@@ -16,7 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Reed\Core;
+namespace Reed\Template;
+
+use Reed\Core\TEnumerator;
 
 class ETemplateType extends TEnumerator
 {

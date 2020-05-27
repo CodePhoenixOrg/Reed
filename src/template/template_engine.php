@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Reed\Core;
+namespace Reed\Template;
 
 use Exception;
 use Reed\Web\TWebObject;
@@ -28,7 +28,6 @@ class TTemplateEngine extends TCustomControl
     use TWebObject;
     protected $templateContents = '';
 
-
     public function getTemplate(): string
     {
         return $this->templateContents;
@@ -36,7 +35,6 @@ class TTemplateEngine extends TCustomControl
 
     public function __construct(TTemplateLoader $loader)
     {
-
         $this->path = $loader->getTemplatePath();
         $this->componentIsInternal = $loader->isInnerTemplate();
         $this->isAJAX = $loader->isClientTemplate();
@@ -47,8 +45,6 @@ class TTemplateEngine extends TCustomControl
 
     public function test(string $templateName): void
     {
-
-
         $info = (object) \pathinfo($this->path);
         $this->viewName = $info->filename;
         $this->dirName = $info->dirname;
