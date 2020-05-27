@@ -24,15 +24,16 @@
 namespace Reed\Web;
 
 use Reed\Core\IObject;
+use Reed\Template\ITemplate;
 
- /**
+/**
  * Description of TObject
  *
  * @author david
  */
  
 
- interface IWebObject extends IHttpTransport, IObject {
+ interface IWebObject extends IHttpTransport, ITemplate, IObject {
  
     public function getCacheFileName();
     public function getJsCacheFileName();

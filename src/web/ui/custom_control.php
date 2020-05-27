@@ -20,7 +20,6 @@ namespace Reed\Web\UI;
 
 use Reed\Core\IObject;
 use Reed\Core\TObject;
-use Reed\Web\IHttpTransport;
 use Reed\Web\IWebObject;
 
 /**
@@ -28,7 +27,7 @@ use Reed\Web\IWebObject;
  *
  * @author David
  */
-abstract class TCustomControl extends TObject implements IHttpTransport, IWebObject
+abstract class TCustomControl extends TObject implements IWebObject
 {
     use \Reed\Web\TWebObject;
 
@@ -36,8 +35,8 @@ abstract class TCustomControl extends TObject implements IHttpTransport, IWebObj
     {
         parent::__construct($parent);
 
-        $this->motherView = $parent->getMotherView();
-        $this->motherUID = $parent->getMotherUID();
+        $this->fatherTemplate = $parent->getFatherTemplate();
+        $this->fatherUID = $parent->getFatherUID();
     }
 
     protected $isRendered = false;

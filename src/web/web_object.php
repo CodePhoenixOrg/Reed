@@ -25,9 +25,10 @@ namespace Reed\Web;
  */
 
 use Reed\Cache\TCache;
-use Reed\MVC\TCustomView;
 use Reed\Registry\TRegistry;
 use Reed\TAutoloader;
+use Reed\Template\ETemplateType;
+use Reed\Template\TCustomTemplate;
 
 trait TWebObject
 {
@@ -55,29 +56,33 @@ trait TWebObject
     protected $parameters = [];
     protected $commands = [];
     protected $application = null;
-    protected $componentIsInternal = false;
     protected $path = '';
     protected $reedEngine = null;
     protected $parentView = null;
     protected $parentType = null;
-    protected $motherView = null;
-    protected $motherUID = '';
+    protected $fatherTemplate = null;
+    protected $fatherUID = '';
+    protected $templatePath = '';
+    protected $templateType = ETemplateType::NON_PHINK_TEMPLATE;
+    protected $componentIsInternal = false;
+    protected $templateIsClient = false;
+    protected $isPartial = false;
 
     public function appendJsToBody(string $viewName): void
     {
         $lock = RUNTIME_DIR . $viewName . '.lock';
 
-        if(file_exists($lock)) {
+        if (file_exists($lock)) {
             return;
         }
 
         $script = $this->getJsCacheFileName($viewName);
 
-        if (!$this->getRequest()->isAJAX()) {
-            $view = $this->getMotherView();
+        if (!$this->isClientTemplate()) {
+            $view = $this->getFatherTemplate();
             $uid = $view->getUID();
 
-            if(!TRegistry::exists('html', $uid)) {
+            if (!TRegistry::exists('html', $uid)) {
                 return;
             }
 
@@ -93,9 +98,8 @@ JSCRIPT;
                 TRegistry::setHtml($uid, $html);
                 file_put_contents($lock, date('Y-m-d h:i:s'));
             }
-
         }
-        if ($this->getRequest()->isAJAX()) {
+        if ($this->isClientTemplate()) {
             $this->response->addScript($script);
         }
     }
@@ -133,14 +137,14 @@ JSCRIPT;
         return $this->cssCacheFileName;
     }
 
-    public function getMotherView(): ?TCustomView
+    public function getFatherTemplate(): ?TCustomTemplate
     {
-        return $this->motherView;
+        return $this->fatherTemplate;
     }
 
-    public function getMotherUID(): string
+    public function getFatherUID(): string
     {
-        return $this->motherUID;
+        return $this->fatherUID;
     }
 
     public function getParentType()
@@ -148,6 +152,30 @@ JSCRIPT;
         return $this->parentType;
     }
 
+    public function getTemplatePath()
+    {
+        return $this->templatePath;
+    }
+
+    public function getTemplateType()
+    {
+        return $this->templateType;
+    }
+
+    public function isClientTemplate()
+    {
+        return $this->templateIsClient;
+    }
+
+    public function isPartialTemplate()
+    {
+        return $this->isPartial;
+    }
+
+    public function isInnerTemplate()
+    {
+        return $this->componentIsInternal;
+    }
 
     public function setRedis(array $params): void
     {
@@ -349,13 +377,13 @@ JSCRIPT;
             if ($info !== null) {
                 // $this->viewName = \Reed\TAutoloader::classNameToFilename($this->className);
                 if ($info->path[0] == '@') {
-                    $path = str_replace("@" . DIRECTORY_SEPARATOR, Reed_VENDOR_APPS, $info->path) . 'app' . DIRECTORY_SEPARATOR;
+                    $path = str_replace("@" . DIRECTORY_SEPARATOR, PHINK_VENDOR_APPS, $info->path) . 'app' . DIRECTORY_SEPARATOR;
                     $this->controllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $this->viewName . CLASS_EXTENSION;
                     $this->jsControllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $this->viewName . JS_EXTENSION;
                     $this->cssFileName = $path . 'views' . DIRECTORY_SEPARATOR . $this->viewName . CSS_EXTENSION;
                     $this->viewFileName = $path . 'views' . DIRECTORY_SEPARATOR . $this->viewName . PREHTML_EXTENSION;
                 } else if ($info->path[0] == '~') {
-                    $path = str_replace("~" . DIRECTORY_SEPARATOR, Reed_VENDOR_WIDGETS, $info->path) . DIRECTORY_SEPARATOR;
+                    $path = str_replace("~" . DIRECTORY_SEPARATOR, PHINK_VENDOR_WIDGETS, $info->path) . DIRECTORY_SEPARATOR;
                     $this->controllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $this->viewName . CLASS_EXTENSION;
                     $this->jsControllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $this->viewName . JS_EXTENSION;
                     $this->cssFileName = $path . 'views' . DIRECTORY_SEPARATOR . $this->viewName . CSS_EXTENSION;
@@ -363,7 +391,7 @@ JSCRIPT;
                 } else {
                     $this->viewName = \Reed\TAutoloader::innerClassNameToFilename($this->className);
 
-                    $path = Reed_VENDOR_LIB . $info->path;
+                    $path = PHINK_VENDOR_LIB . $info->path;
                     $this->controllerFileName = $path . $this->viewName . CLASS_EXTENSION;
                     $this->jsControllerFileName = $path . $this->viewName . JS_EXTENSION;
                     $this->cssFileName = $path . $this->viewName . CSS_EXTENSION;
@@ -416,7 +444,7 @@ JSCRIPT;
                 $viewName = \Reed\TAutoloader::innerClassNameToFilename($typeName);
 
                 if ($info->path[0] == '@') {
-                    $path = str_replace("@" . DIRECTORY_SEPARATOR, Reed_VENDOR_APPS, $info->path) . 'app' . DIRECTORY_SEPARATOR;
+                    $path = str_replace("@" . DIRECTORY_SEPARATOR, PHINK_VENDOR_APPS, $info->path) . 'app' . DIRECTORY_SEPARATOR;
                     $controllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $viewName . CLASS_EXTENSION;
                     $jsControllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $viewName . JS_EXTENSION;
                     $cssFileName = $path . 'views' . DIRECTORY_SEPARATOR . $viewName . CSS_EXTENSION;
@@ -466,11 +494,8 @@ JSCRIPT;
     {
         $this->path = $parent->getPath();
         $this->dirName = $parent->getDirName();
-        $this->authentication = $parent->getAuthentication();
 
-        $this->commands = $this->application->getCommands();
         $this->parameters = $parent->getParameters();
-        $this->twigEnvironment = $parent->getTwigEnvironment();
         $this->componentIsInternal = $parent->isInternalComponent();
 
         $this->request = $parent->getRequest();

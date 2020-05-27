@@ -20,8 +20,8 @@ namespace Reed\Web\UI;
 
 use Reed\Cache\TCache;
 use Reed\Core\IObject;
-use Reed\MVC\TCustomView;
 use Reed\Registry\TRegistry;
+use Reed\Template\TCustomTemplate;
 
 /**
  * Description of custom_control
@@ -40,14 +40,9 @@ abstract class TCustomCachedControl extends TCustomControl
         parent::__construct($parent);
     }
 
-    public function getView(): ?TCustomView
+    public function getView(): ?TCustomTemplate
     {
         return $this->view;
-    }
-
-    public function getModel(): TModel
-    {
-        return $this->model;
     }
 
     public function getInnerHtml(): string
@@ -130,7 +125,7 @@ abstract class TCustomCachedControl extends TCustomControl
     {
         $this->init();
         $this->createObjects();
-        if ($this->getRequest()->isAJAX()) {
+        if ($this->isClientTemplate()) {
             $this->partialLoad();
 
             try {
@@ -178,7 +173,7 @@ abstract class TCustomCachedControl extends TCustomControl
 
             //TWebObject::register($this);
 
-            if ($this->getParent()->isMotherView()) {
+            if ($this->getParent()->isFatherTemplate()) {
                 TRegistry::dump($this->getUID());
             }
 
@@ -188,6 +183,5 @@ abstract class TCustomCachedControl extends TCustomControl
 
     public function __destruct()
     {
-        unset($this->model);
     }
 }

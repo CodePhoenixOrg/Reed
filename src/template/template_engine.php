@@ -39,11 +39,10 @@ class TTemplateEngine extends TCustomControl
         $this->componentIsInternal = $loader->isInnerTemplate();
         $this->isAJAX = $loader->isClientTemplate();
         $this->isPartial = $loader->isPartialTemplate();
-        $this->test('home.phtml');
 
     }
 
-    public function test(string $templateName): void
+    public function generate(string $templateName, array $dictionary): string
     {
         $info = (object) \pathinfo($this->path);
         $this->viewName = $info->filename;
@@ -59,10 +58,14 @@ class TTemplateEngine extends TCustomControl
         $this->setNamespace();
         $this->setNames();
 
-        $parser = new TTemplateParser($this);
-        $parser->parse();
-        $creations = $parser->getCreations();
-        $declarations = $parser->getAdditions();
-        $viewHtml = $parser->getViewHtml();
+        $template = new TTemplate($this, $dictionary);
+        $template->parse();
+        $creations = $template->getCreations();
+        $declarations = $template->getAdditions();
+        $viewHtml = $template->getViewHtml();
+
+        self::getLogger()->debug($viewHtml);
+
+        return $viewHtml;
     }
 }

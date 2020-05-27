@@ -15,12 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
- 
+
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
+
 namespace Reed\Template;
 
 use Reed\Registry\TRegistry;
@@ -32,26 +33,20 @@ use Reed\Registry\TRegistry;
  */
 class TTemplate extends TCustomTemplate
 {
-    public function __construct(\Reed\Web\IWebObject $parent)
+    public function __construct(\Reed\Web\IWebObject $parent, array $dictionary)
     {
-        parent::__construct($parent);
-        
+        parent::__construct($parent, $dictionary);
+
         $this->viewName = $parent->getViewName();
 
         $this->clonePrimitivesFrom($parent);
         $this->cloneNamesFrom($parent);
         $this->getCacheFileName();
         $this->cacheFileName = $parent->getCacheFileName();
-
-        // if ($this->getType() == 'TView' && $this->motherView === null) {
-            $this->motherView = $this;
-            $this->viewIsMother = true;
-            $this->motherUID = $this->getUID();
-        // }
+        $this->fatherTemplate = $this;
+        $this->viewIsFather = true;
+        $this->fatherUID = $this->getUID();
 
         TRegistry::importClasses($this->getDirName());
-
-
     }
-
- }
+}

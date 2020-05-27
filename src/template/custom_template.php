@@ -45,27 +45,30 @@ abstract class TCustomTemplate extends TCustomControl
     protected $controllerIsIncluded = false;
     protected $pattern = '';
     protected $depth = 0;
-    protected $viewIsMother = false;
+    protected $viewIsFather = false;
     protected $engineIsReed = true;
     protected $engineIsTwig = false;
+    protected $dictionary = [];
 
-    function __construct(IWebObject $parent)
+    function __construct(IWebObject $parent, array $dictionary)
     {
         parent::__construct($parent);
 
         $this->clonePrimitivesFrom($parent);
 
         //$this->redis = new Client($this->context->getRedis());
+
+        $this->dictionary = $dictionary;
     }
     
-    function isMotherView(): bool
+    function isFatherTemplate(): bool
     {
-        return $this->viewIsMother;
+        return $this->viewIsFather;
     }
 
-    function isDirty(): bool
+    function getDictionary(): ?array
     {
-        return $this->_dirty;
+        return $this->dictionary;
     }
 
     function isReedEngine(): bool
@@ -169,13 +172,13 @@ abstract class TCustomTemplate extends TCustomControl
         $head = $this->getStyleSheetTag();
         $script = $this->getScriptTag();
 
-        if ($this->isMotherView()) {
+        if ($this->isFatherTemplate()) {
             if ($head !== null) {
-                TRegistry::push($this->getMotherUID(), 'head', $head);
+                TRegistry::push($this->getFatherUID(), 'head', $head);
                 $this->appendToHead($head, $this->viewHtml);
             }
             if ($script !== null) {
-                TRegistry::push($this->getMotherUID(), 'scripts', $script);
+                TRegistry::push($this->getFatherUID(), 'scripts', $script);
                 $this->appendToBody($script, $this->viewHtml);
             }
         }
@@ -208,7 +211,7 @@ abstract class TCustomTemplate extends TCustomControl
         // We store the parsed code in a file so that we know it's already parsed on next request.
         $code = str_replace(CREATIONS_PLACEHOLDER, $this->creations, $code);
         $code = str_replace(ADDITIONS_PLACEHOLDER, $this->additions, $code);
-        if (!$this->isMotherView() || $this->getRequest()->isAJAX()) {
+        if (!$this->isFatherTemplate() || $this->isClientTemplate()) {
             $code = str_replace(HTML_PLACEHOLDER, $this->viewHtml, $code);
         }
         $code = str_replace(DEFAULT_CONTROLLER, DEFAULT_CONTROL, $code);
@@ -217,7 +220,7 @@ abstract class TCustomTemplate extends TCustomControl
         $code = str_replace(PARTIAL_CONTROLLER, PARTIAL_CONTROL, $code);
         if (!empty(trim($code))) {
             self::$logger->debug('SOMETHING TO CACHE : ' . $this->getCacheFileName(), __FILE__, __LINE__);
-            if (!$this->isMotherView()) {
+            if (!$this->isFatherTemplate()) {
                 file_put_contents($this->getCacheFileName(), $code);
             }
             TRegistry::setCode($this->getUID(), $code);

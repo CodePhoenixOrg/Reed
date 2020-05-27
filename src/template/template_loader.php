@@ -21,7 +21,7 @@ namespace Reed\Template;
 use Exception;
 use Reed\Core\TObject;
 
-class TTemplateLoader extends TObject
+class TTemplateLoader extends TObject implements ITemplate
 {
     protected $templatePath = '';
     protected $templateType = ETemplateType::NON_PHINK_TEMPLATE;
@@ -36,7 +36,7 @@ class TTemplateLoader extends TObject
 
     public function getTemplateType()
     {
-        return $this->templatePath;
+        return $this->templateType;
     }
 
     public function isClientTemplate()

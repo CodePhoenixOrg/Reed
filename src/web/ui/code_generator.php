@@ -256,7 +256,7 @@ trait TCodeGenerator
 
     public function writeHTML(TXmlDocument $doc, TCustomTemplate $parentTemplate)
     {
-        $motherView = $parentTemplate->getMotherView();
+        $dictionary = $parentTemplate->getDictionary();
         $viewHtml = $parentTemplate->getViewHtml();
         $uid = $parentTemplate->getUID();
 

@@ -169,7 +169,7 @@ class TWebRouter extends TRouter
             list($file, $type, $code) = $result;
         }
         if ($result === null) {
-            if ($this->getRequest()->isAJAX() && $this->request->isPartialView()) {
+            if ($this->isClientTemplate() && $this->request->isPartialView()) {
                 list($file, $type, $code) = TAutoloader::includeDefaultPartialController($this->namespace, $this->className);
             } else {
                 list($file, $type, $code) = TAutoloader::includeDefaultController($this->namespace, $this->className);

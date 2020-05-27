@@ -18,12 +18,14 @@
 
 namespace Phink\Core;
 
-use Phink\Core\TObject;
-use Phink\Registry\TRegistry;
+use Reed\Core\TObject;
+use Reed\Registry\TRegistry;
+use Reed\Web\IWebObject;
+use Reed\Web\TWebObject;
 
-class TRouter extends TObject implements \Phink\Web\IWebObject
+class TRouter extends TObject implements IWebObject
 {
-    use \Phink\Web\TWebObject;
+    use TWebObject;
 
     protected $apiName = '';
     protected $baseNamespace = '';
@@ -39,7 +41,6 @@ class TRouter extends TObject implements \Phink\Web\IWebObject
         $this->parent = $parent;
         $this->application = $parent;
         $this->commands = $parent->getCommands();
-        $this->authentication = $parent->getAuthentication();
         $this->request = $parent->getRequest();
         $this->response = $parent->getResponse();
         $this->twigEnvironment = $parent->getTwigEnvironment();

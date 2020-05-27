@@ -15,25 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
- namespace Reed\Template;
 
- use Reed\Web\IWebObject;
+namespace Reed\Template;
 
-class TPartialTemplate extends TCustomTemplate
+interface ITemplate
 {
-    public function __construct(IWebObject $parent, array $dictionary, ?string $className = null)
-    {
-        $this->className = $parent->getType();
-        if($className !== null) {
-            $this->className = $className;
-        }
-        parent::__construct($parent, $dictionary);
-
-        $this->clonePrimitivesFrom($parent);
-
-        $this->setViewName($this->className);
-        $this->setNamespace();
-        $this->setNames();
-    }
+    public function getTemplatePath();
+    public function getTemplateType();
+    public function isClientTemplate();
+    public function isPartialTemplate();
+    public function isInnerTemplate();
 }
