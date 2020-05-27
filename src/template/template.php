@@ -21,9 +21,8 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-namespace Reed\MVC;
+namespace Reed\Template;
 
-use \Reed\Core\TRouter;
 use Reed\Registry\TRegistry;
 
 /**
@@ -31,7 +30,7 @@ use Reed\Registry\TRegistry;
  *
  * @author david
  */
-class TView extends TCustomView
+class TTemplate extends TCustomTemplate
 {
     public function __construct(\Reed\Web\IWebObject $parent)
     {

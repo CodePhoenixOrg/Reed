@@ -25,7 +25,7 @@ use Reed\Web\IWebObject;
 use Reed\Web\UI\TCustomControl;
 use Reed\Xml\TXmlDocument;
 
-abstract class TTemplateParser extends TCustomControl
+abstract class TCustomTemplate extends TCustomControl
 {
     use \Reed\Web\UI\TCodeGenerator {
         writeDeclarations as private;

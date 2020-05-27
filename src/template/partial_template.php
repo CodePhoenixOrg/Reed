@@ -16,13 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
  
- namespace Reed\MVC;
+ namespace Reed\Template;
 
- use Reed\Core\IObject;
  use Reed\Web\IWebObject;
- use Reed\MVC\TCustomView;
 
-class TPartialView extends TCustomView
+class TPartialTemplate extends TCustomTemplate
 {
     public function __construct(IWebObject $parent, ?string $className = null)
     {

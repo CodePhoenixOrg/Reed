@@ -59,5 +59,10 @@ class TTemplateEngine extends TCustomControl
         $this->setNamespace();
         $this->setNames();
 
+        $parser = new TTemplateParser($this);
+        $parser->parse();
+        $creations = $parser->getCreations();
+        $declarations = $parser->getAdditions();
+        $viewHtml = $parser->getViewHtml();
     }
 }
