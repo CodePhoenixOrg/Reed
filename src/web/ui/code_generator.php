@@ -22,9 +22,9 @@ use Reed\Cache\TCache;
 use Reed\Registry\TRegistry;
 use Reed\Xml\TXmlDocument;
 use Reed\Xml\TXmlMatch;
-use Reed\MVC\TCustomView;
-use Reed\MVC\TPartialView;
-use \Reed\TAutoloader;
+use Reed\TAutoloader;
+use Reed\Template\TCustomTemplate;
+use Reed\Template\TPartialTemplate;
 
 /**
  * Description of code_generator
@@ -34,13 +34,13 @@ use \Reed\TAutoloader;
 trait TCodeGenerator
 {
     //put your code here
-    public function writeDeclarations(TXmlDocument $doc, TCustomView $parentView)
+    public function writeDeclarations(TXmlDocument $doc, TCustomTemplate $parentTemplate)
     {
         $result = '';
         $matches = $doc->getMatchesByDepth();
         $docList = $doc->getList();
         $count = count($docList);
-        $uid = $parentView->getUID();
+        $uid = $parentTemplate->getUID();
 
         $code = '';
         $uses = [];
@@ -102,31 +102,31 @@ trait TCodeGenerator
                     $fqcn = $info->namespace . '\\' . $className;
                 } elseif ($className !== 'this') {
                     $viewName = TAutoloader::userClassNameToFilename($className);
-                    $view = new TPartialView($parentView, $className);
+                    $view = new TPartialTemplate($parentTemplate, $className);
                     $view->setNames();
                     $fullClassPath = $view->getControllerFileName();
                     $fullJsClassPath = $view->getJsControllerFileName();
 
-                    $fullJsCachePath = TCache::cacheJsFilenameFromView($viewName, $parentView->isInternalComponent());
+                    $fullJsCachePath = TCache::cacheJsFilenameFromView($viewName, $parentTemplate->isInternalComponent());
                     array_push($requires, '\\Reed\\TAutoloader::import($this, "' . $className . '");');
 
                     self::getLogger()->dump('FULL_CLASS_PATH', $fullClassPath);
 
-                    // list($file, $fqcn, $code) = TAutoloader::includeViewClass($parentView, RETURN_CODE);
+                    // list($file, $fqcn, $code) = TAutoloader::includeViewClass($parentTemplate, RETURN_CODE);
                     list($file, $fqcn, $code) = TAutoloader::includeClass($fullClassPath, RETURN_CODE);
 
                     self::getLogger()->dump('FULL_QUALIFIED_CLASS_NAME: ', $fqcn);
 
                     if (file_exists(DOCUMENT_ROOT . $fullJsCachePath)) {
-                        $parentView->getResponse()->addScriptFirst($fullJsCachePath);
+                        $parentTemplate->getResponse()->addScriptFirst($fullJsCachePath);
                     }
                     if (file_exists(SRC_ROOT . $fullJsClassPath)) {
                         copy(SRC_ROOT . $fullJsClassPath, DOCUMENT_ROOT . $fullJsCachePath);
-                        $parentView->getResponse()->addScriptFirst($fullJsCachePath);
+                        $parentTemplate->getResponse()->addScriptFirst($fullJsCachePath);
                     }
                     if (file_exists(SITE_ROOT . $fullJsClassPath)) {
                         copy(SITE_ROOT . $fullJsClassPath, DOCUMENT_ROOT . $fullJsCachePath);
-                        $parentView->getResponse()->addScriptFirst($fullJsCachePath);
+                        $parentTemplate->getResponse()->addScriptFirst($fullJsCachePath);
                     }
                     TRegistry::setCode($view->getUID(), $code);
                 }
@@ -203,7 +203,7 @@ trait TCodeGenerator
                     array_push($additions[$j], '} ');
                 }
                 array_push($additions[$j], '$this->addChild(' . $thisControl . ');');
-                if($canRender && $className !== 'this') {
+                if ($canRender && $className !== 'this') {
                     array_push($additions[$j], '$html = ' .  $thisControl . '->getHtml();');
                     array_push($additions[$j], '\\Reed\\Registry\\TRegistry::push("' . $uid . '", "' . $controlId . '", $html);');
                 }
@@ -215,7 +215,7 @@ trait TCodeGenerator
 
 
             $method = $docList[$j]['method'];
-            if ((TRegistry::classInfo($method)  && TRegistry::classCanRender($method)) || !TRegistry::classInfo($method)) {
+            if ((TRegistry::classInfo($method) && TRegistry::classCanRender($method)) || !TRegistry::classInfo($method)) {
                 $doc->fieldValue($j, 'method', 'render');
             }
         }
@@ -254,11 +254,11 @@ trait TCodeGenerator
         return (object) ['creations' => $objectCreation, 'additions' => $objectAdditions, 'afterBinding' => $objectAfterBiding];
     }
 
-    public function writeHTML(TXmlDocument $doc, TCustomView $parentView)
+    public function writeHTML(TXmlDocument $doc, TCustomTemplate $parentTemplate)
     {
-        $motherView = $parentView->getMotherView();
-        $viewHtml = $parentView->getViewHtml();
-        $uid = $parentView->getUID();
+        $motherView = $parentTemplate->getMotherView();
+        $viewHtml = $parentTemplate->getViewHtml();
+        $uid = $parentTemplate->getUID();
 
         $count = $doc->getCount();
         $matchesSort = $doc->getMatchesByDepth();
