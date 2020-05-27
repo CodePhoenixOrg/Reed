@@ -43,6 +43,16 @@ class TCache extends TStaticObject
         return  REL_RUNTIME_CSS_DIR . ($isFrameworkComponent ? 'inner_' : '') . strtolower('stylesheet_' . $viewName . CSS_EXTENSION);
     }
 
+    public static function absoluteURL(string $relativeURL = ''): string
+    {
+        return ((HTTP_HOST !== SERVER_NAME) ? SERVER_HOST : SERVER_ROOT) . REWRITE_BASE . $relativeURL;
+    }
+
+    public static function cachePath(string $filepath): string
+    {
+        return  str_replace(DIRECTORY_SEPARATOR, '_', $filepath);
+    }
+
     public static function cacheFile($filename, $content): void
     {
         $filename = CACHE_DIR . $filename;

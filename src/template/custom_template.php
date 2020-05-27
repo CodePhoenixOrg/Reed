@@ -20,7 +20,6 @@ namespace Reed\Template;
 
 use Reed\Cache\TCache;
 use Reed\Registry\TRegistry;
-use Reed\TAutoloader;
 use Reed\Web\IWebObject;
 use Reed\Web\UI\TCustomControl;
 use Reed\Xml\TXmlDocument;
@@ -59,6 +58,8 @@ abstract class TCustomTemplate extends TCustomControl
         //$this->redis = new Client($this->context->getRedis());
 
         $this->dictionary = $dictionary;
+        $uid = $this->getUID();
+        TRegistry::write('template', $uid, $dictionary);
     }
     
     function isFatherTemplate(): bool
@@ -141,13 +142,13 @@ abstract class TCustomTemplate extends TCustomControl
     {
         while (empty($this->getViewHtml())) {
             if (file_exists(SRC_ROOT . $this->viewFileName) && !empty($this->viewFileName)) {
-                self::$logger->debug('PARSE SRC ROOT FILE : ' . $this->viewFileName, __FILE__, __LINE__);
+                self::getLogger()->debug('PARSE SRC ROOT FILE : ' . $this->viewFileName, __FILE__, __LINE__);
 
                 $this->viewHtml = file_get_contents(SRC_ROOT . $this->viewFileName);
                 continue;
             }
             if (file_exists(SITE_ROOT . $this->viewFileName) && !empty($this->viewFileName)) {
-                self::$logger->debug('PARSE SITE ROOT FILE : ' . $this->viewFileName, __FILE__, __LINE__);
+                self::getLogger()->debug('PARSE SITE ROOT FILE : ' . $this->viewFileName, __FILE__, __LINE__);
 
                 $this->viewHtml = file_get_contents(SITE_ROOT . $this->viewFileName);
                 continue;
@@ -161,7 +162,7 @@ abstract class TCustomTemplate extends TCustomControl
                 } else {
                     $path = SITE_ROOT . $this->getPath();
                 }
-                self::$logger->debug('PARSE Reed VIEW : ' . $path, __FILE__, __LINE__);
+                self::getLogger()->debug('PARSE Reed VIEW : ' . $path, __FILE__, __LINE__);
 
                 $this->viewHtml = file_get_contents($path);
 
@@ -203,7 +204,7 @@ abstract class TCustomTemplate extends TCustomControl
         TRegistry::setHtml($this->getUID(), $this->viewHtml);
 
         if (!TRegistry::exists('code', $this->getUID())) {
-            self::$logger->debug('NO NEED TO WRITE CODE: ' . $this->controllerFileName, __FILE__, __LINE__);
+            self::getLogger()->debug('NO NEED TO WRITE CODE: ' . $this->controllerFileName, __FILE__, __LINE__);
             return false;
         }
 
@@ -219,7 +220,7 @@ abstract class TCustomTemplate extends TCustomControl
         $code = str_replace(CONTROLLER, CONTROL, $code);
         $code = str_replace(PARTIAL_CONTROLLER, PARTIAL_CONTROL, $code);
         if (!empty(trim($code))) {
-            self::$logger->debug('SOMETHING TO CACHE : ' . $this->getCacheFileName(), __FILE__, __LINE__);
+            self::getLogger()->debug('SOMETHING TO CACHE : ' . $this->getCacheFileName(), __FILE__, __LINE__);
             if (!$this->isFatherTemplate()) {
                 file_put_contents($this->getCacheFileName(), $code);
             }
@@ -257,7 +258,7 @@ abstract class TCustomTemplate extends TCustomControl
     function getScriptTag(): ?string
     {
         $cacheJsFilename = TCache::cacheJsFilenameFromView($this->getViewName(), $this->isInternalComponent());
-        $script = "<script src='" . TAutoloader::absoluteURL($cacheJsFilename) . "'></script>" . PHP_EOL;
+        $script = "<script src='" . TCache::absoluteURL($cacheJsFilename) . "'></script>" . PHP_EOL;
 
         $ok = $this->safeCopy($this->getJsControllerFileName(), $cacheJsFilename);
 
@@ -267,7 +268,7 @@ abstract class TCustomTemplate extends TCustomControl
     function getStyleSheetTag(): ?string
     {
         $cacheCssFilename = TCache::cacheCssFilenameFromView($this->getViewName(), $this->isInternalComponent());
-        $head = "<link rel='stylesheet' href='" . TAutoloader::absoluteURL($cacheCssFilename) . "' />" . PHP_EOL;
+        $head = "<link rel='stylesheet' href='" . TCache::absoluteURL($cacheCssFilename) . "' />" . PHP_EOL;
 
         $ok = $this->safeCopy($this->getCssFileName(), $cacheCssFilename);
 

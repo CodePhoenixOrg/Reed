@@ -37,6 +37,7 @@ trait TCodeGenerator
     public function writeDeclarations(TXmlDocument $doc, TCustomTemplate $parentTemplate)
     {
         $result = '';
+        $dictionary = $parentTemplate->getDictionary();
         $matches = $doc->getMatchesByDepth();
         $docList = $doc->getList();
         $count = count($docList);
@@ -102,7 +103,7 @@ trait TCodeGenerator
                     $fqcn = $info->namespace . '\\' . $className;
                 } elseif ($className !== 'this') {
                     $viewName = TAutoloader::userClassNameToFilename($className);
-                    $view = new TPartialTemplate($parentTemplate, $className);
+                    $view = new TPartialTemplate($parentTemplate, [], $className);
                     $view->setNames();
                     $fullClassPath = $view->getControllerFileName();
                     $fullJsClassPath = $view->getJsControllerFileName();
@@ -295,7 +296,10 @@ trait TCodeGenerator
             if ($tag == 'echo' && $const) {
                 $declare = '<?php echo ' . $const . '; ?>';
             } elseif ($tag == 'echo' && $var) {
-                $declare = '<?php echo ' . $type . $var . '; ?>';
+                /** $declare = '<?php echo ' . $type . $var . '; ?>';  */
+
+                $declare = '<?php echo \\Reed\\Registry\\TRegistry::read("template", "' . $uid . '")["' . $var . '"]; ?>';
+
             } elseif ($tag == 'echo' && $prop) {
                 $declare = '<?php echo ' . $type . 'get' . ucfirst($prop) . '(); ?>';
             } elseif ($tag == 'exec') {

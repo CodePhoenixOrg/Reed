@@ -482,7 +482,6 @@ JSCRIPT;
     {
         // $this->className = $parent->getClassName();
         $this->actionName = $parent->getActionName();
-        $this->modelFileName = $parent->getModelFileName();
         $this->viewFileName = $parent->getViewFileName();
         $this->cssFileName = $parent->getCssFileName();
         $this->controllerFileName = $parent->getControllerFileName();
@@ -498,7 +497,5 @@ JSCRIPT;
         $this->parameters = $parent->getParameters();
         $this->componentIsInternal = $parent->isInternalComponent();
 
-        $this->request = $parent->getRequest();
-        $this->response = $parent->getResponse();
     }
 }

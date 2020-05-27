@@ -23,6 +23,7 @@ use Reed\Core\TStaticObject;
 use Reed\MVC\TCustomView;
 use Reed\MVC\TPartialView;
 use Reed\Registry\TRegistry;
+use Reed\Template\TCustomTemplate;
 use Reed\Web\UI\TCustomCachedControl;
 use Reed\Web\UI\TCustomControl;
 
@@ -87,30 +88,6 @@ class TAutoloader extends TStaticObject
         return $translated;
     }
 
-    public static function cacheFilenameFromView(string $viewName): string
-    {
-        return REL_RUNTIME_DIR . strtolower('controller_' . $viewName . CLASS_EXTENSION);
-    }
-
-    public static function cacheJsFilenameFromView(string $viewName): string
-    {
-        return REL_RUNTIME_JS_DIR . strtolower('javascript_' . $viewName . JS_EXTENSION);
-    }
-
-    public static function absoluteURL(string $relativeURL = ''): string
-    {
-        return ((HTTP_HOST !== SERVER_NAME) ? SERVER_HOST : SERVER_ROOT) . REWRITE_BASE . $relativeURL;
-    }
-
-    public static function cacheCssFilenameFromView(string $viewName): string
-    {
-        return  REL_RUNTIME_CSS_DIR . strtolower('stylesheet_' . $viewName . CSS_EXTENSION);
-    }
-
-    public static function cachePath(string $filepath): string
-    {
-        return  str_replace(DIRECTORY_SEPARATOR, '_', $filepath);
-    }
 
     /**
      * Loads a class from a file using its fully qualified name.
@@ -214,7 +191,7 @@ class TAutoloader extends TStaticObject
      *                    RETURN_CODE : ...
      * @return boolean
      */
-    public static function includeViewClass(TCustomView $view, $params = 0): ?array
+    public static function includeViewClass(TCustomTemplate $view, $params = 0): ?array
     {
         $filename = $view->getControllerFileName();
         $classFilename = SRC_ROOT . $filename;
@@ -315,13 +292,13 @@ class TAutoloader extends TStaticObject
 
         if ($info !== null) {
             $viewName = self::innerClassNameToFilename($className);
-            $path = Reed_VENDOR_LIB . $info->path;
+            $path = PHINK_VENDOR_LIB . $info->path;
 
             if ($info->path[0] == '@') {
-                $path = str_replace("@" . DIRECTORY_SEPARATOR, Reed_VENDOR_APPS, $info->path);
+                $path = str_replace("@" . DIRECTORY_SEPARATOR, PHINK_VENDOR_APPS, $info->path);
             }
             if ($info->path[0] == '~') {
-                $path = str_replace("~" . DIRECTORY_SEPARATOR, Reed_VENDOR_WIDGETS, $info->path);
+                $path = str_replace("~" . DIRECTORY_SEPARATOR, PHINK_VENDOR_WIDGETS, $info->path);
             }
 
             $cacheFilename = TCache::cacheFilenameFromView($viewName, $ctrl->isInternalComponent());

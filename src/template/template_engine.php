@@ -19,6 +19,7 @@
 namespace Reed\Template;
 
 use Exception;
+use Reed\Registry\TRegistry;
 use Reed\Web\TWebObject;
 use Reed\Web\UI\TCustomControl;
 
@@ -42,9 +43,9 @@ class TTemplateEngine extends TCustomControl
 
     }
 
-    public function generate(string $templateName, array $dictionary): string
+    public function render(string $templateName, array $dictionary): string
     {
-        $info = (object) \pathinfo($this->path);
+        $info = (object) \pathinfo($this->path . $templateName);
         $this->viewName = $info->filename;
         $this->dirName = $info->dirname;
         $this->bootDirName = $info->dirname;
@@ -62,10 +63,14 @@ class TTemplateEngine extends TCustomControl
         $template->parse();
         $creations = $template->getCreations();
         $declarations = $template->getAdditions();
-        $viewHtml = $template->getViewHtml();
+        $php = $template->getViewHtml();
 
-        self::getLogger()->debug($viewHtml);
+        TRegistry::write('php', $template->getUID(), $php);
 
-        return $viewHtml;
+        ob_start();
+        eval('?>' . $php);
+        $html = ob_get_clean();
+
+        return $html;
     }
 }

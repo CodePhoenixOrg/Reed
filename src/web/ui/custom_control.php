@@ -78,11 +78,7 @@ abstract class TCustomControl extends TObject implements IWebObject
     {
     }
 
-    public function renderTwig(): void
-    {
-    }
-
-    public function render(): void
+    public function renderPhp(): void
     {
     }
 
