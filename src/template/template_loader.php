@@ -19,7 +19,6 @@
 namespace Reed\Template;
 
 use Exception;
-use Reed\Core\ETemplateType;
 use Reed\Core\TObject;
 
 class TTemplateLoader extends TObject
