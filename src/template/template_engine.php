@@ -19,6 +19,7 @@
 namespace Reed\Template;
 
 use Exception;
+use Reed\Cache\TCache;
 use Reed\Registry\TRegistry;
 use Reed\Web\TWebObject;
 use Reed\Web\UI\TCustomControl;
@@ -66,6 +67,10 @@ class TTemplateEngine extends TCustomControl
         $php = $template->getViewHtml();
 
         TRegistry::write('php', $template->getUID(), $php);
+
+        $filename = $this->getCacheFileName();
+
+        file_put_contents($filename, $php);
 
         ob_start();
         eval('?>' . $php);
