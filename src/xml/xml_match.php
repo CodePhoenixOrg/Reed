@@ -109,7 +109,7 @@ class TXmlMatch extends TObject
         return $this->_end;
     }
 
-    public function getChildName(): stirng
+    public function getChildName(): string
     {
         return $this->_childName;
     }

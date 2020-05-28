@@ -289,21 +289,11 @@ class TXmlDocument extends TObject
             $this->_list[$i]['hasCloser'] = $hasCloser;
             $this->_list[$i]['childName'] = '';
             if (!isset($parentId[$depth])) {
-                // $parentId[$depth] = ($siblingId > 0) ? $siblingId : -1;
                 $parentId[$depth] = $i - 1;
             }
             $this->_list[$i]['parentId'] = $parentId[$depth];
             /** begin */
-            if ($isSibling && $depth > -1) {
-                $parentId[$depth - 1] = $siblingId;
-            }
-
-            // $this->_list[$i]['parentId'] = (isset($parentId[$depth - 1])) ?  $parentId[$depth - 1] : -1;
             $this->_list[$i]['isSibling'] = $isSibling;
-
-            if (isset($this->_list[$siblingId]) && $this->_list[$siblingId]['isSibling']) {
-                $parentId[$depth - 1] = $i;
-            }
             /** end */
             $this->_list[$i]['properties'] = $properties;
 
@@ -315,15 +305,13 @@ class TXmlDocument extends TObject
                     $this->_list[$i]['isSibling'] = $isSibling;
 
                     /** begin */
-                    // $pId = !$isSibling ? $this->_list[$i]['parentId'] : $siblingId;
                     $pId = !$isSibling && isset($parentId[$depth]) ? $parentId[$depth] : $siblingId;
 
-                    if ($this->_list[$pId]['isSibling']) {
-                        $depth--;
-                    }
-                    if ($this->_list[$i]['isSibling']) {
-                        $depth--;
-                    }
+                    $depth--;
+
+                    $fatherId = $parentId[$depth];
+
+                    $this->_list[$i]['parentId'] = $fatherId;
                     /** end */
 
                     $this->_list[$i]['depth'] = $depth;
@@ -334,17 +322,15 @@ class TXmlDocument extends TObject
                     }
 
                     /** begin */
-
                     $this->_list[$i]['depth'] = $this->_list[$i]['depth'];
 
                     if ($this->_list[$pId]['isSibling']) {
                         $this->_list[$i]['depth'] = $this->_list[$pId]['depth'];
                     }
-                    $this->_list[$i]['parentId'] = $this->_list[$pId]['id'];
                     /** end */
 
-
                     $this->_list[$pId]['closer'] = $this->_list[$i];
+                    $this->_list[$pId]['closer']['parentId'] = $this->_list[$pId]['id'];
                     unset($this->_list[$i]);
                 } elseif ($s[1] == QUEST_MARK) {
                 } elseif ($s[strlen($s) - 2] == TERMINATOR) {
