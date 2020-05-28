@@ -53,13 +53,12 @@ trait TCodeGenerator
         $childName = [];
         $childrenIndex = [];
 
-        // $doc->getLogger()->debug('DOC LIST');
-        // $doc->getLogger()->debug($docList);
-        //        array_push($creations, []);
+        self::getLogger()->debug('DOC LIST');
+        self::getLogger()->debug($docList);
 
         $isFirst = true;
         foreach ($docList as $control) {
-            if (in_array($control['name'], ['page', 'echo', 'exec', 'type']) || $control['method'] == 'render') {
+            if (in_array($control['name'], ['page', 'echo', 'exec', 'type', 'block']) || $control['method'] == 'render') {
                 continue;
             }
 
@@ -85,7 +84,7 @@ trait TCodeGenerator
                     }
                 }
 
-                // self::$logger->debug(print_r($control['properties'], true) . PHP_EOL);
+                self::getLogger()->debug(print_r($control['properties'], true) . PHP_EOL);
 
                 $properties = $control['properties'];
                 $controlId = $properties['id'];
@@ -271,7 +270,7 @@ trait TCodeGenerator
             $tag = $match->getMethod();
             $name = $match->getName();
 
-            if ($tag != 'echo' && $tag != 'exec' && $tag != 'render') {
+            if ($tag != 'echo' && $tag != 'exec' && $tag != 'render' && $tag != 'block') {
                 continue;
             }
 
@@ -284,6 +283,7 @@ trait TCodeGenerator
             $prop = $match->properties('prop');
             $stmt = $match->properties('stmt');
             $params = $match->properties('params');
+            $content = $match->properties('content');
 
             if (!$type || $type == 'this') {
                 $type = '$this->';
@@ -298,8 +298,7 @@ trait TCodeGenerator
             } elseif ($tag == 'echo' && $var) {
                 /** $declare = '<?php echo ' . $type . $var . '; ?>';  */
 
-                $declare = '<?php echo \\Reed\\Registry\\TRegistry::read("template", "' . $uid . '")["' . $var . '"]; ?>';
-
+                $declare = '<?php echo \\Reed\\Registry\\TRegistry::read("template", "' . $uid . '")["' . $var . '"];?>';
             } elseif ($tag == 'echo' && $prop) {
                 $declare = '<?php echo ' . $type . 'get' . ucfirst($prop) . '(); ?>';
             } elseif ($tag == 'exec') {
@@ -307,12 +306,16 @@ trait TCodeGenerator
                 if ($params != null) {
                     $declare = '<?php echo ' . $type . $stmt . '(' . $params . '); ?>';
                 }
+            } elseif ($tag == 'block' && false !== $content) {
+                $plaintext = substr($content, 9);
+                $plaintext = \base64_decode($plaintext);
+                $declare = $plaintext;
             } elseif ($tag == 'render') {
                 if ($name == 'this') {
                     $declare = '<?php $this->renderHtml(); $this->renderedHtml(); ?>';
                 } else {
                     /** $declare = '<?php ' . $type . $id . '->render(); ?>'; */
-                    $declare = '<?php echo \\Reed\\Registry\\TRegistry::read("' . $uid . '", "' . $id . '")[0]; ?>';
+                    $declare = '<?php echo \\Reed\\Registry\\TRegistry::read("' . $uid . '", "' . $id . '")[0];?>';
                 }
             }
 
