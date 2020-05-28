@@ -19,8 +19,11 @@
 
 namespace Reed\Cache;
 
+use Reed\Core\TObject;
 use Reed\Utils\TFileUtils;
 use Reed\Core\TStaticObject;
+use Reed\Web\IWebObject;
+use Reed\Web\UI\TCustomCachedControl;
 
 class TCache extends TStaticObject
 {
@@ -216,5 +219,25 @@ class TCache extends TStaticObject
         }
 
         return $result;
+    }
+
+    public static function loadCachedFile(IWebObject $parent): TCustomCachedControl
+    {
+        self::getLogger()->dump('PARENT OBJECT', $parent->getType());
+        self::getLogger()->dump('PARENT OBJECT', $parent->getClassName());
+
+        // $parent->setCacheFilename();
+        $cacheFilename = $parent->getCacheFilename();
+        self::getLogger()->debug('CACHE FILE NAME TO INCLUDE: ' . $cacheFilename);
+
+        list($namespace, $className, $code) = TObject::getClassDefinition($cacheFilename);
+
+        include $cacheFilename;
+
+        $fqClassName = $namespace . '\\' . $className;
+
+        $controller = new $fqClassName($parent);
+
+        return $controller;
     }
 }

@@ -20,6 +20,7 @@ namespace Reed\Core;
 
 use \ReflectionClass;
 use DateTime;
+use Reed\Registry\TRegistry;
 
 interface IObject
 {
@@ -68,7 +69,7 @@ class TObject extends TStaticObject implements IObject
 
     public function setId($value): void
     {
-        //self::$logger->dump(__CLASS__ . ':' . __METHOD__, $value);
+        //TObject::$logger->dump(__CLASS__ . ':' . __METHOD__, $value);
         $this->id = $value;
     }
 
@@ -97,6 +98,7 @@ class TObject extends TStaticObject implements IObject
 
         return $params;
     }
+
 
     public function getParent(): ?IObject
     {
@@ -166,113 +168,6 @@ class TObject extends TStaticObject implements IObject
         return $reflection->getFileName();
     }
 
-    public function validate($method)
-    {
-        if ($method == '') return false;
-
-        $result = [];
-
-        if (!method_exists($this, $method)) {
-            throw new \BadMethodCallException($this->getFQClassName() . "::$method is undefined");
-        } else {
-
-            $params = $this->getMethodParameters($method);
-
-            $args = $_REQUEST;
-            if (isset($args['PHPSESSID'])) unset($args['PHPSESSID']);
-            if (isset($args['action'])) unset($args['action']);
-            if (isset($args['token'])) unset($args['token']);
-            if (isset($args['q'])) unset($args['q']);
-            if (isset($args['_'])) unset($args['_']);
-            $args = array_keys($args);
-
-            $validArgs = [];
-            foreach ($args as $arg) {
-                if (!in_array($arg, $params)) {
-                    throw new \BadMethodCallException($this->getFQClassName() . "::$method::$arg is undefined");
-                } else {
-                    array_push($validArgs, $arg);
-                }
-            }
-            foreach ($params as $param) {
-                if (!in_array($param, $validArgs)) {
-                    throw new \BadMethodCallException($this->getFQClassName() . "::$method::$param is missing");
-                } else {
-                    $result[$param] = \Reed\Web\TRequest::getQueryStrinng($param);
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    public function invoke($method, $params = array())
-    {
-        $result = null;
-        $values = array_values($params);
-
-        if (count($values) > 0) {
-            $args = '"' . implode('", "', $values) . '"';
-            self::$logger->debug(__METHOD__ . '::INVOKE_ACTION::' . $method  . '(' . $args . ')');
-            //            include 'data://text/plain;base64,' . base64_encode('<?php $this->' . $method  . '(' . $args . ')');
-            $ref = new \ReflectionMethod($this->getFQClassName(), $method);
-            $result = $ref->invokeArgs($this, $values);
-        } else {
-            self::$logger->debug(__METHOD__ . '::INVOKE_ACTION::' . $method  . '()');
-            //            $ref->invoke($this);
-            $result = $this->$method();
-        }
-
-        return $result;
-    }
-
-    public function serialize(): string
-    {
-        //return serialize($this);
-        $this->_reflection = $this->getReflection();
-        $methods = $this->_reflection->getMethods(\ReflectionMethod::IS_PUBLIC);
-
-        $result = print_r($methods, true);
-
-        return $result;
-    }
-
-    public function unserialize($serialized)
-    {
-        //return (object)unserialize($serialized);
-    }
-
-    public function sleep(): void
-    {
-        $this->serialFilename = RUNTIME_DIR . $this->id . JSON_EXTENSION;
-        $this->isSerialized = true;
-
-        //        $phpObject = var_export($this, true);
-        //        $objectFilename = RUNTIME_DIR . $this->id . '.obj.txt';
-        //        file_put_contents($objectFilename, $phpObject);
-
-        file_put_contents($this->serialFilename, $this->serialize());
-    }
-
-    public function wake()
-    {
-        $serialFilename = RUNTIME_DIR . $this->id . JSON_EXTENSION;
-        $result = file_exists($serialFilename);
-
-        $serialized = ($result) ? file_get_contents($serialFilename) : $result;
-
-        return ($serialized) ? unserialize($serialized) : $result;
-    }
-
-    public static function wakeUp($id)
-    {
-        $serialFilename = RUNTIME_DIR . $id . JSON_EXTENSION;
-        $result = file_exists($serialFilename);
-
-        $serialized = ($result) ? file_get_contents($serialFilename) : $result;
-
-        return ($serialized) ? unserialize($serialized) : $result;
-    }
 
     public static function arraysToObjects(array $value): array
     {
@@ -284,4 +179,123 @@ class TObject extends TStaticObject implements IObject
 
         return $result;
     }
+
+    
+    public static function userClassNameToFilename($className): string
+    {
+        $translated = '';
+        $l = strlen($className);
+        for ($i = 0; $i < $l; $i++) {
+            if (ctype_upper($className[$i])) {
+                $translated .= '_' . strtolower($className[$i]);
+            } else {
+                $translated .= $className[$i];
+            }
+        }
+
+        $translated = substr($translated, 1);
+
+        return $translated;
+    }
+
+    public static function innerClassNameToFilename($className): string
+    {
+        $translated = '';
+        $className = substr($className, 1);
+        $l = strlen($className);
+        for ($i = 0; $i < $l; $i++) {
+            if (ctype_upper($className[$i])) {
+                $translated .= '_' . strtolower($className[$i]);
+            } else {
+                $translated .= $className[$i];
+            }
+        }
+
+        $translated = substr($translated, 1);
+
+        return $translated;
+    }
+    public static function getClassDefinition(string $filename): array
+    {
+        $classText = file_get_contents($filename);
+
+        $namespace = TObject::grabKeywordName('namespace', $classText, ';');
+        $className = TObject::grabKeywordName('class', $classText, ' ');
+
+        return [$namespace, $className, $classText];
+    }
+
+    public static function grabKeywordName(string $keyword, string $classText, $delimiter): string
+    {
+        $result = '';
+
+        $start = strpos($classText, $keyword);
+        if ($start > -1) {
+            $start += \strlen($keyword) + 1;
+            $end = strpos($classText, $delimiter, $start);
+            $result = substr($classText, $start, $end - $start);
+        }
+
+        return $result;
+    }
+
+    public static function getDefaultNamespace(): string
+    {
+        $sa = explode('.', SERVER_NAME);
+        array_pop($sa);
+        if (count($sa) == 2) {
+            array_shift($sa);
+        }
+
+        return ucfirst(str_replace('-', '_', $sa[0])) . '\\Controllers';
+    }
+
+
+     /**
+     * Load the controller file, parse it in search of namespace and classname.
+     * Alternatively execute the code if the class is not already declared
+     *
+     * @param string $filename The controller filename
+     * @param int $params The bitwise constants values that determine the behavior
+     *                    INCLUDE_FILE : execute the code
+     *                    RETURN_CODE : ...
+     * @return boolean
+     */
+    public static function includeClass(string $filename, $params = 0): ?array
+    {
+        $classFilename = SRC_ROOT . $filename;
+        if (!file_exists($classFilename)) {
+            $classFilename = SITE_ROOT . $filename;
+        }
+        if (!file_exists($classFilename)) {
+            return null;
+        }
+
+        list($namespace, $className, $code) = TObject::getClassDefinition($classFilename);
+
+        $fqClassName = trim($namespace) . "\\" . trim($className);
+
+        $file = str_replace('\\', '_', $fqClassName) . '.php';
+
+        if (isset($params) && ($params && RETURN_CODE === RETURN_CODE)) {
+            $code = substr(trim($code), 0, -2) . PHP_EOL . CONTROL_ADDITIONS;
+            TRegistry::setCode($filename, $code);
+        }
+
+        TObject::getLogger()->debug(__METHOD__ . '::' . $filename, __FILE__, __LINE__);
+
+        if ((isset($params) && ($params && INCLUDE_FILE === INCLUDE_FILE)) && !class_exists('\\' . $fqClassName)) {
+            if (\Phar::running() != '') {
+                include pathinfo($filename, PATHINFO_BASENAME);
+            } else {
+                //include $classFilename;
+            }
+        }
+
+        return [$classFilename, $fqClassName, $code];
+    }
+
+    
+
+
 }
