@@ -39,10 +39,11 @@ class TXmlMatch extends TObject
     private $_start = 0;
     private $_end = 0;
     private $_depth = 0;
-    private $_tmpText = '';
+    private $_isSibling = false;
     private $_childName = '';
     private $_hasChildren = false;
     private $_closer = '';
+    private $_hasCloser = '';
     private $_properties = array();
     private $_method = '';
 
@@ -60,15 +61,11 @@ class TXmlMatch extends TObject
         $this->_closer = (isset($array['closer'])) ? $array['closer'] : NULL;
         $this->_childName = $array['childName'];
         $this->_properties = $array['properties'];
+        $this->_hasCloser = isset($this->_closer);
         $this->_method = $array['method'];
 
-        $this->_hasChildren = isset($this->_closer);
-        if ($this->_hasChildren) {
-            $this->_end = $this->_closer['endsAt'];
-        }
+        $this->_hasChildren = !empty($this->_childName);
     }
-
-
 
     public function getParentId(): int
     {
@@ -119,11 +116,21 @@ class TXmlMatch extends TObject
         return $this->_hasChildren;
     }
 
+    public function hasCloser(): bool
+    {
+        return $this->_hasCloser;
+    }
+   
+    public function isSibling(): bool
+    {
+        return $this->_isSibling;
+    }
+    
     public function getCloser(): array
     {
         return $this->_closer;
     }
-
+ 
     public function getMethod(): string
     {
         return $this->_method;

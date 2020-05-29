@@ -38,7 +38,7 @@ trait TCodeGenerator
     {
         $result = '';
         $dictionary = $parentTemplate->getDictionary();
-        $matches = $doc->getMatchesByDepth();
+        $matches = $doc->getDepthsOfMatches();
         $docList = $doc->getList();
         $count = count($docList);
         $uid = $parentTemplate->getUID();
@@ -83,8 +83,6 @@ trait TCodeGenerator
                         }
                     }
                 }
-
-                self::getLogger()->debug(print_r($control['properties'], true) . PHP_EOL);
 
                 $properties = $control['properties'];
                 $controlId = $properties['id'];
@@ -261,11 +259,13 @@ trait TCodeGenerator
         $uid = $parentTemplate->getUID();
 
         $count = $doc->getCount();
-        $matchesSort = $doc->getMatchesByDepth();
-        $docList = $doc->getList();
+        $matchesByDepth = $doc->getDepthsOfMatches();
+        $matchesById = $doc->getIDsOfMatches();
+        $matchesByKey = $doc->getKeysOfMatches();
+        
         for ($i = $count - 1; $i > -1; $i--) {
-            $j = $matchesSort[$i];
-            $match = new TXmlMatch($docList[$j]);
+            $j = $matchesById[$i];
+            $match = $doc->getMatchById($j);
 
             $tag = $match->getMethod();
             $name = $match->getName();
@@ -320,6 +320,7 @@ trait TCodeGenerator
             }
 
             $viewHtml = $doc->replaceThisMatch($match, $viewHtml, $declare);
+
         }
         return $viewHtml;
     }
