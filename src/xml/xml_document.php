@@ -25,6 +25,7 @@
 
 namespace Reed\Xml;
 
+use Reed\Registry\TRegistry;
 use Reed\Core\TObject;
 
 /**
@@ -217,14 +218,13 @@ class TXmlDocument extends TObject
             $offset = 0;
 
             $currentMatchKey = $this->_matchesByKey[$match->getId()];
-
             $previousMatchId = isset($this->_matchesById[$currentMatchKey + 1]) ? $this->_matchesById[$currentMatchKey + 1] : $match->getId();
 
             if (
                 !$match->isSibling()
+                && !$match->isRegistered()
                 && $previousMatchId != $match->getId()
             ) {
-
                 $replacingLength = $closer['startsAt'] - $match->getEnd() - 1;
                 TXmlDocument::getLogger()->debug("replacing on " . $match->getId() . "::");
                 TXmlDocument::getLogger()->debug($replacing);
@@ -277,12 +277,13 @@ class TXmlDocument extends TObject
         for ($j = $l - 1; $j > -1; $j--) {
             $id = $this->_matchesById[$j];
             if ($this->_list[$id]['parentId'] == $parentId) {
-                $offset += $this->_offsetsById[$id];
+                $offset += isset($this->_offsetsById[$id]) ? $this->_offsetsById[$id] : 0;
                 $offset += $this->findOffset($id);
             }
         }
         return $offset;
     }
+
     private function _parse(string $tag, string $text, string $cursor): array
     {
         $properties = [];
@@ -371,6 +372,8 @@ class TXmlDocument extends TObject
             }
             $this->_list[$i]['parentId'] = $parentId[$depth];
             $this->_list[$i]['isSibling'] = $isSibling;
+            $this->_list[$i]['isRegistered'] = TRegistry::classInfo($this->_list[$i]['name']) !== null;
+
             $this->_list[$i]['properties'] = $properties;
 
             $cursor = $closeElementPos + 1;
@@ -387,7 +390,10 @@ class TXmlDocument extends TObject
                     $this->_list[$i]['parentId'] = $fatherId;
                     $this->_list[$i]['depth'] = $depth;
 
-                    if ((empty($this->_list[$pId]['properties']['content']))) {
+                    if (
+                        empty($this->_list[$pId]['properties']['content'])
+                        && !$this->_list[$i]['isRegistered']
+                    ) {
                         $contents = substr($text, $this->_list[$pId]['endsAt'] + 1, $this->_list[$i]['startsAt'] - $this->_list[$pId]['endsAt'] - 1);
                         $this->_list[$pId]['properties']['content'] = '!#base64#' . base64_encode($contents); // uniqid();
                     }

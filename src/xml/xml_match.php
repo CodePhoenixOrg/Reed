@@ -46,23 +46,25 @@ class TXmlMatch extends TObject
     private $_hasCloser = '';
     private $_properties = array();
     private $_method = '';
+    private $_isRegistered = false;
 
     //$text, $groups, $position, $start, $end, $childName, $closer
-    public function __construct(array $array)
+    public function __construct(array $attributes)
     {
-        $this->id = $array['id'];
-        $this->_parentId = $array['parentId'];
-        $this->_text = $array['element'];
+        $this->id = $attributes['id'];
+        $this->_parentId = $attributes['parentId'];
+        $this->_text = $attributes['element'];
         $this->_tmpText = $this->_text;
-        $this->_name = $array['name'];
-        $this->_start = $array['startsAt'];
-        $this->_end = $array['endsAt'];
-        $this->_depth = $array['depth'];
-        $this->_closer = (isset($array['closer'])) ? $array['closer'] : NULL;
-        $this->_childName = $array['childName'];
-        $this->_properties = $array['properties'];
+        $this->_name = $attributes['name'];
+        $this->_start = $attributes['startsAt'];
+        $this->_end = $attributes['endsAt'];
+        $this->_depth = $attributes['depth'];
+        $this->_closer = (isset($attributes['closer'])) ? $attributes['closer'] : NULL;
+        $this->_childName = $attributes['childName'];
+        $this->_properties = $attributes['properties'];
         $this->_hasCloser = isset($this->_closer);
-        $this->_method = $array['method'];
+        $this->_method = $attributes['method'];
+        $this->_isRegistered = $attributes['isRegistered'];
 
         $this->_hasChildren = !empty($this->_childName);
     }
@@ -134,5 +136,10 @@ class TXmlMatch extends TObject
     public function getMethod(): string
     {
         return $this->_method;
+    }
+
+    public function isRegistered(): bool
+    {
+        return $this->_isRegistered;
     }
 }
