@@ -19,14 +19,14 @@
 namespace Reed\Web;
 
 /**
- * Description of TObject
+ * Description of TWebObject
  *
  * @author david
  */
 
 use Reed\Cache\TCache;
+use Reed\Core\TObject;
 use Reed\Registry\TRegistry;
-use Reed\TAutoloader;
 use Reed\Template\ETemplateType;
 use Reed\Template\TCustomTemplate;
 
@@ -86,7 +86,7 @@ trait TWebObject
                 return;
             }
 
-            $scriptURI = TAutoloader::absoluteURL($script);
+            $scriptURI = TCache::absoluteURL($script);
             $jscall = <<<JSCRIPT
             <script type='text/javascript' src='{$scriptURI}'></script>
 JSCRIPT;
@@ -287,10 +287,10 @@ JSCRIPT;
 
             $info = TRegistry::classInfo($className);
             if ($info !== null) {
-                $this->viewName = TAutoloader::innerClassNameToFilename($className);
+                $this->viewName = TCustomTemplate::innerClassNameToFilename($className);
             }
             if ($info === null) {
-                $this->viewName = TAutoloader::userClassNameToFilename($className);
+                $this->viewName = TCustomTemplate::userClassNameToFilename($className);
             }
             return;
         }
@@ -340,7 +340,7 @@ JSCRIPT;
         $this->namespace = $this->getFileNamespace();
 
         if (!isset($this->namespace)) {
-            $this->namespace = \Reed\TAutoloader::getDefaultNamespace();
+            $this->namespace = TObject::getDefaultNamespace();
         }
     }
 
@@ -375,7 +375,7 @@ JSCRIPT;
         if (!file_exists(SITE_ROOT . $this->viewFileName) && !file_exists(SRC_ROOT . $this->viewFileName)) {
             $info = TRegistry::classInfo($this->className);
             if ($info !== null) {
-                // $this->viewName = \Reed\TAutoloader::classNameToFilename($this->className);
+                // $this->viewName = \Reed\TCustomTemplate::classNameToFilename($this->className);
                 if ($info->path[0] == '@') {
                     $path = str_replace("@" . DIRECTORY_SEPARATOR, PHINK_VENDOR_APPS, $info->path) . 'app' . DIRECTORY_SEPARATOR;
                     $this->controllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $this->viewName . CLASS_EXTENSION;
@@ -389,7 +389,7 @@ JSCRIPT;
                     $this->cssFileName = $path . 'views' . DIRECTORY_SEPARATOR . $this->viewName . CSS_EXTENSION;
                     $this->viewFileName = $path . 'views' . DIRECTORY_SEPARATOR . $this->viewName . PREHTML_EXTENSION;
                 } else {
-                    $this->viewName = \Reed\TAutoloader::innerClassNameToFilename($this->className);
+                    $this->viewName = \Reed\TCustomTemplate::innerClassNameToFilename($this->className);
 
                     $path = PHINK_VENDOR_LIB . $info->path;
                     $this->controllerFileName = $path . $this->viewName . CLASS_EXTENSION;
@@ -415,10 +415,10 @@ JSCRIPT;
 
         $info = TRegistry::classInfo($typeName);
         if ($info !== null) {
-            $viewName = TAutoloader::innerClassNameToFilename($typeName);
+            $viewName = TCustomTemplate::innerClassNameToFilename($typeName);
         }
         if ($info === null) {
-            $viewName = TAutoloader::userClassNameToFilename($typeName);
+            $viewName = TCustomTemplate::userClassNameToFilename($typeName);
         }
 
         if ($typeName === null) {
@@ -441,7 +441,7 @@ JSCRIPT;
         if (!file_exists(SITE_ROOT . $viewFileName) && !file_exists(SRC_ROOT . $viewFileName)) {
             $info = TRegistry::classInfo($typeName);
             if ($info !== null) {
-                $viewName = \Reed\TAutoloader::innerClassNameToFilename($typeName);
+                $viewName = \Reed\TCustomTemplate::innerClassNameToFilename($typeName);
 
                 if ($info->path[0] == '@') {
                     $path = str_replace("@" . DIRECTORY_SEPARATOR, PHINK_VENDOR_APPS, $info->path) . 'app' . DIRECTORY_SEPARATOR;

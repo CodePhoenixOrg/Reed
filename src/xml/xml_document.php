@@ -59,7 +59,7 @@ class TXmlDocument extends TObject
     private $_cursor = 0;
     private $_matches = [];
     private $_text = STR_EMPTY;
-    private $_id = -1;
+    private $_currentMatchKey = -1;
     private $_match = null;
     private $_list = [];
     private $_depths = [];
@@ -68,10 +68,11 @@ class TXmlDocument extends TObject
     private $_matchesByKey = [];
     private $_offsetsById = [];
     private $_replacingsById = [];
+    private $_endOfFile = OPEN_TAG . TAG_PATTERN_ANY . 'eof' . STR_SPACE . TERMINATOR . CLOSE_TAG;
 
     public function __construct($text)
     {
-        $this->_text = $text . OPEN_TAG . TAG_PATTERN_ANY . 'eof' . STR_SPACE . TERMINATOR . CLOSE_TAG;
+        $this->_text = $text . $this->_endOfFile;
     }
 
     public function getMatches(): array
@@ -171,39 +172,91 @@ class TXmlDocument extends TObject
         return $result;
     }
 
-    public function getMatch(): ?TXmlMatch
+    public function resetMatchId(): void
     {
-        if ($this->_match == null) {
-            $this->_match = new TXmlMatch($this->_list[$this->_id]);
+        $this->_currentMatchKey = -1;
+    }
+
+    public function getCurrentMatch(): ?TXmlMatch
+    {
+        $currentId = $this->_matchesById[$this->_currentMatchKey];
+        if ($this->_match === null || $this->_match->getId() !== $currentId) {
+            $this->_match = new TXmlMatch($this->_list[$currentId]);
         }
 
         return $this->_match;
     }
 
-    public function nextMatch(): ?TXmlMatch
+    public function getNextMatch(): ?TXmlMatch
     {
+        $this->_currentMatchKey++;
+
         $this->_match = null;
-        if ($this->_id == $this->_count - 1) {
+        if ($this->_currentMatchKey == $this->_count) {
             return null;
         }
 
-        $this->_id++;
-
-        return $this->getMatch();
+        return $this->getCurrentMatch();
     }
 
-    public function replaceMatch(string $replacing): string
+    public function replaceMatches(TXmlDocument $doc, string $text): string
     {
-        if ($this->_match->hasChildren()) {
-            $start = $this->_match->getStart();
-            $length = $this->_match->getEnd() - $this->_match->getStart() + 1;
-            $replaced = substr($this->_text, $start, $length);
-            $this->_text = str_replace($replaced, $replacing, $this->_text);
-        } else {
-            $this->_text = str_replace($this->_match->getText(), $replacing, $this->_text);
+        $masterMatchesById = $this->getIDsOfMatches();
+        $masterCount = $this->getCount();
+        $masterText = $this->_text;
+
+        $slaveMatchesById = $doc->getIDsOfMatches();
+        $slaveCount = $doc->getCount();
+        $slaveText = $text;
+
+        for ($i = $masterCount - 1; $i > -1; $i--) {
+            $masterId = $masterMatchesById[$i];
+            $masterMatch = $this->getMatchById($masterId);
+            $replaced = '';
+
+            if ($masterMatch->getMethod() !== 'block') {
+                continue;
+            }
+
+            if ($masterMatch->hasCloser()) {
+                $start = $masterMatch->getStart();
+                $closer = $masterMatch->getCloser();
+                $length = $closer['endsAt'] - $masterMatch->getStart() + 1;
+
+                $replaced = substr($masterText, $start, $length);
+            } else {
+                $replaced = $masterMatch->getText();
+            }
+
+            for ($j = $slaveCount - 1; $j > -1; $j--) {
+                $slaveId = $slaveMatchesById[$j];
+                $slaveMatch = $doc->getMatchById($slaveId);
+                $replacing = '';
+
+                if (
+                    $slaveMatch->getMethod() !== 'block'
+                    || $masterMatch->properties('name') !== $slaveMatch->properties('name')
+                ) {
+                    continue;
+                }
+
+                if ($slaveMatch->hasCloser()) {
+                    $start = $slaveMatch->getStart();
+                    $closer = $slaveMatch->getCloser();
+                    $length = $closer['endsAt'] - $slaveMatch->getStart() + 1;
+
+                    $replacing = substr($slaveText, $start, $length);
+                } else {
+                    $replacing = $slaveMatch->getText();
+                }
+
+                $masterText = str_replace($replaced, $replacing, $masterText);
+            }
         }
 
-        return $this->_text;
+        $masterText = str_replace($this->_endOfFile, '', $masterText);
+        
+        return $masterText;
     }
 
     public function replaceThisMatch(TXmlMatch $match, string $text, string $replacing): string

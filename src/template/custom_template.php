@@ -188,11 +188,34 @@ abstract class TCustomTemplate extends TCustomControl
         $doc = new TXmlDocument($this->viewHtml);
         $doc->matchAll();
 
-        // $matches = $doc->getList();
+        $firstMatch = $doc->getMatchById(0);
+        if ($firstMatch->getMethod() === 'extends') {
 
-        // foreach($matches as $match) {
-        //     self::$logger->debug(print_r($match, true) . PHP_EOL);
-        // }
+            $masterFilename = $firstMatch->properties('template');
+
+            self::getLogger()->debug('MASTER FILE NAME::' . VIEWS_DIR . $masterFilename);
+
+            $masterHtml = file_get_contents(VIEWS_DIR . $masterFilename);
+
+            self::getLogger()->debug('MASTER FILE EXITS::' . (false !== $masterHtml) ? 'TRUE' : 'FALSE');
+
+            $masterDoc = new TXmlDocument($masterHtml);
+            $masterDoc->matchAll();
+
+            $this->viewHtml = $masterDoc->replaceMatches($doc, $this->viewHtml);
+
+            self::getLogger()->debug('BEGIN MASTER DOC LIST');
+            self::getLogger()->debug($masterDoc->getList());
+            self::getLogger()->debug('END MASTER DOC LIST');
+
+            $doc = new TXmlDocument($this->viewHtml);
+            $doc->matchAll();
+    
+            self::getLogger()->debug('BEGIN FINAL DOC LIST');
+            self::getLogger()->debug($masterDoc->getList());
+            self::getLogger()->debug('END FINAL DOC LIST');
+        }
+
 
         if ($doc->getCount() > 0) {
             $declarations = $this->writeDeclarations($doc, $this);
@@ -466,7 +489,7 @@ CONTROLLER;
 
         return [$file, $type, $code];
     }
-    
+
     private static function includeInnerClass(TCustomTemplate $view, object $info, bool $withCode = true): array
     {
         $className = $view->getClassName();
@@ -474,7 +497,7 @@ CONTROLLER;
 
         // $filename = $info->path . 'app' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR  . \Reed\TAutoloader::innerClassNameToFilename($className) . CLASS_EXTENSION;
         // $filename = $view->getControllerFileName();
-        $filename = $info->path . 'app' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR  . $viewName. CLASS_EXTENSION;
+        $filename = $info->path . 'app' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR  . $viewName . CLASS_EXTENSION;
 
         if ($filename[0] == '@') {
             $filename = \str_replace('@/', PHINK_APPS_ROOT, $filename);

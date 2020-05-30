@@ -18,11 +18,13 @@
 
 namespace Reed\Web\UI;
 
+use Exception;
+use Phink\Core\TObject;
+use phpDocumentor\Reflection\DocBlock\Tags\Example;
 use Reed\Cache\TCache;
 use Reed\Registry\TRegistry;
 use Reed\Xml\TXmlDocument;
 use Reed\Xml\TXmlMatch;
-use Reed\TAutoloader;
 use Reed\Template\TCustomTemplate;
 use Reed\Template\TPartialTemplate;
 
@@ -33,9 +35,11 @@ use Reed\Template\TPartialTemplate;
  */
 trait TCodeGenerator
 {
+    private $_reservedKeywords = ['page', 'echo', 'exec', 'type', 'block', 'extends'];
     //put your code here
     public function writeDeclarations(TXmlDocument $doc, TCustomTemplate $parentTemplate)
     {
+
         $result = '';
         $dictionary = $parentTemplate->getDictionary();
         $matches = $doc->getDepthsOfMatches();
@@ -58,7 +62,7 @@ trait TCodeGenerator
 
         $isFirst = true;
         foreach ($docList as $control) {
-            if (in_array($control['name'], ['page', 'echo', 'exec', 'type', 'block']) || $control['method'] == 'render') {
+            if (in_array($control['name'], $this->_reservedKeywords) || $control['method'] == 'render') {
                 continue;
             }
 
@@ -85,7 +89,16 @@ trait TCodeGenerator
                 }
 
                 $properties = $control['properties'];
-                $controlId = $properties['id'];
+
+                try {
+                    $controlId = isset($properties['id']) ? $properties['id'] : null;
+                    if ($controlId === null) {
+                        throw new Exception("This control has no 'id' attribute. Please provide one.");
+                    }
+                } catch (Exception $ex) {
+                    self::getLogger()->exception($ex);
+                }
+
                 //$className = ucfirst($control['name']);
                 $className = $control['name'];
                 $fqcn = '';
@@ -94,24 +107,23 @@ trait TCodeGenerator
                 //self::$logger->dump('REGISTRY INFO ' . $className, $info);
                 if ($info) {
                     if (!$info->isAutoloaded) {
-                        array_push($requires, '\\Reed\\TAutoloader::import($this, "' . $className . '");');
+                        array_push($requires, '\\Reed\\TCustomTemplate::import($this, "' . $className . '");');
                         //                        array_push($requires, '$this->import("' . $className . '");');
                     }
                     $fqcn = $info->namespace . '\\' . $className;
                 } elseif ($className !== 'this') {
-                    $viewName = TAutoloader::userClassNameToFilename($className);
+                    $viewName = TCustomTemplate::userClassNameToFilename($className);
                     $view = new TPartialTemplate($parentTemplate, [], $className);
                     $view->setNames();
                     $fullClassPath = $view->getControllerFileName();
                     $fullJsClassPath = $view->getJsControllerFileName();
 
                     $fullJsCachePath = TCache::cacheJsFilenameFromView($viewName, $parentTemplate->isInternalComponent());
-                    array_push($requires, '\\Reed\\TAutoloader::import($this, "' . $className . '");');
+                    array_push($requires, '\\Reed\\TCustomTemplate::import($this, "' . $className . '");');
 
                     self::getLogger()->dump('FULL_CLASS_PATH', $fullClassPath);
 
-                    // list($file, $fqcn, $code) = TAutoloader::includeViewClass($parentTemplate, RETURN_CODE);
-                    list($file, $fqcn, $code) = TAutoloader::includeClass($fullClassPath, RETURN_CODE);
+                    list($file, $fqcn, $code) = TCustomTemplate::includeClass($fullClassPath, RETURN_CODE);
 
                     self::getLogger()->dump('FULL_QUALIFIED_CLASS_NAME: ', $fqcn);
 
@@ -262,7 +274,7 @@ trait TCodeGenerator
         $matchesByDepth = $doc->getDepthsOfMatches();
         $matchesById = $doc->getIDsOfMatches();
         $matchesByKey = $doc->getKeysOfMatches();
-        
+
         for ($i = $count - 1; $i > -1; $i--) {
             $j = $matchesById[$i];
             $match = $doc->getMatchById($j);
@@ -270,7 +282,7 @@ trait TCodeGenerator
             $tag = $match->getMethod();
             $name = $match->getName();
 
-            if ($tag != 'echo' && $tag != 'exec' && $tag != 'render' && $tag != 'block') {
+            if (!in_array($tag, $this->_reservedKeywords)) {
                 continue;
             }
 
@@ -320,7 +332,6 @@ trait TCodeGenerator
             }
 
             $viewHtml = $doc->replaceThisMatch($match, $viewHtml, $declare);
-
         }
         return $viewHtml;
     }
