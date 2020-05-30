@@ -19,12 +19,9 @@
 namespace Reed\Web\UI;
 
 use Exception;
-use Phink\Core\TObject;
-use phpDocumentor\Reflection\DocBlock\Tags\Example;
 use Reed\Cache\TCache;
 use Reed\Registry\TRegistry;
 use Reed\Xml\TXmlDocument;
-use Reed\Xml\TXmlMatch;
 use Reed\Template\TCustomTemplate;
 use Reed\Template\TPartialTemplate;
 
@@ -282,7 +279,7 @@ trait TCodeGenerator
             $tag = $match->getMethod();
             $name = $match->getName();
 
-            if (!in_array($tag, $this->_reservedKeywords)) {
+            if ($tag != 'echo' && $tag != 'exec' && $tag != 'render' && $tag != 'block') {
                 continue;
             }
 
