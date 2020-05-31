@@ -141,36 +141,41 @@ abstract class TCustomTemplate extends TCustomControl
 
     function parse(): bool
     {
+        $baseViewDir = SITE_ROOT;
+
         while (empty($this->getViewHtml())) {
             if (file_exists(SRC_ROOT . $this->viewFileName) && !empty($this->viewFileName)) {
-                self::getLogger()->debug('PARSE SRC ROOT FILE : ' . $this->viewFileName, __FILE__, __LINE__);
+                // self::getLogger()->debug('PARSE SRC ROOT FILE : ' . $this->viewFileName, __FILE__, __LINE__);
 
-                $this->viewHtml = file_get_contents(SRC_ROOT . $this->viewFileName);
+                $baseViewDir = SRC_ROOT;
+                $this->viewHtml = file_get_contents($baseViewDir . $this->viewFileName);
+
                 continue;
             }
             if (file_exists(SITE_ROOT . $this->viewFileName) && !empty($this->viewFileName)) {
-                self::getLogger()->debug('PARSE SITE ROOT FILE : ' . $this->viewFileName, __FILE__, __LINE__);
+                // self::getLogger()->debug('PARSE SITE ROOT FILE : ' . $this->viewFileName, __FILE__, __LINE__);
 
-                $this->viewHtml = file_get_contents(SITE_ROOT . $this->viewFileName);
+                $this->viewHtml = file_get_contents($baseViewDir . $this->viewFileName);
+
                 continue;
             }
 
-            $viewPath = SITE_ROOT . $this->getDirName() . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->viewName . PREHTML_EXTENSION;
-            if (file_exists($viewPath)) {
-                $path = $this->getPath();
-                if ($path[0] == '@') {
-                    $path = str_replace("@" . DIRECTORY_SEPARATOR, SITE_ROOT, $this->getPath());
-                } else {
-                    $path = SITE_ROOT . $this->getPath();
+            if (SITE_ROOT . $this->getDirName() . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->viewName . PREHTML_EXTENSION == $this->getPath()) {
+
+                $this->viewFileName = $this->getPath();
+                if ($this->viewFileName[0] == '@') {
+                    $this->viewFileName = str_replace("@" . DIRECTORY_SEPARATOR, '', $this->viewFileName);
                 }
-                self::getLogger()->debug('PARSE Reed VIEW : ' . $path, __FILE__, __LINE__);
-
-                $this->viewHtml = file_get_contents($path);
+                $this->viewHtml = file_get_contents($baseViewDir . $this->viewFileName);
 
                 continue;
             }
+
             break;
         }
+
+        $fullViewDir = $baseViewDir . pathinfo($this->viewFileName, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR;
+        
         $head = $this->getStyleSheetTag();
         $script = $this->getScriptTag();
 
@@ -188,34 +193,32 @@ abstract class TCustomTemplate extends TCustomControl
         $doc = new TXmlDocument($this->viewHtml);
         $doc->matchAll();
 
-        $firstMatch = $doc->getMatchById(0);
-        if ($firstMatch->getMethod() === 'extends') {
+        $firstMatch = $doc->getNextMatch();
+        if ($firstMatch !== null && $firstMatch->getMethod() === 'extends') {
 
             $masterFilename = $firstMatch->properties('template');
-
-            self::getLogger()->debug('MASTER FILE NAME::' . VIEWS_DIR . $masterFilename);
-
-            $masterHtml = file_get_contents(VIEWS_DIR . $masterFilename);
-
-            self::getLogger()->debug('MASTER FILE EXITS::' . (false !== $masterHtml) ? 'TRUE' : 'FALSE');
+            $masterViewName = pathinfo($masterFilename, PATHINFO_FILENAME);
+            $masterHtml = file_get_contents($fullViewDir . $masterFilename);
 
             $masterDoc = new TXmlDocument($masterHtml);
             $masterDoc->matchAll();
 
             $this->viewHtml = $masterDoc->replaceMatches($doc, $this->viewHtml);
 
-            self::getLogger()->debug('BEGIN MASTER DOC LIST');
-            self::getLogger()->debug($masterDoc->getList());
-            self::getLogger()->debug('END MASTER DOC LIST');
+            $masterHead = $this->getStyleSheetTag($masterViewName, false);
+            $masterScript = $this->getScriptTag($masterViewName, false);
+
+            if ($masterHead !== null) {
+                $this->appendToHead($masterHead, $this->viewHtml);
+            }
+            if ($masterScript !== null) {
+                $this->appendToBody($masterScript, $this->viewHtml);
+            }
 
             $doc = new TXmlDocument($this->viewHtml);
             $doc->matchAll();
-    
-            self::getLogger()->debug('BEGIN FINAL DOC LIST');
-            self::getLogger()->debug($masterDoc->getList());
-            self::getLogger()->debug('END FINAL DOC LIST');
-        }
 
+        }
 
         if ($doc->getCount() > 0) {
             $declarations = $this->writeDeclarations($doc, $this);
@@ -279,26 +282,55 @@ abstract class TCustomTemplate extends TCustomControl
         return $ok;
     }
 
-    function getScriptTag(): ?string
+    function getScriptTag(?string $viewName = null, ?bool $isInternal = null): ?string
     {
-        $cacheJsFilename = TCache::cacheJsFilenameFromView($this->getViewName(), $this->isInternalComponent());
+        $jsControllerFileName = '';
+
+        if ($viewName !== null) {
+            $mvc = $this->getMvcFileNamesByViewName($viewName);
+            $jsControllerFileName = $mvc['jsControllerFileName'];
+        }
+
+        if ($viewName === null) {
+            $jsControllerFileName = $this->getJsControllerFileName();
+            $viewName = $this->getViewName();
+        }
+        if ($isInternal === null) {
+            $isInternal = $this->isInternalComponent();
+        }
+
+        $cacheJsFilename = TCache::cacheJsFilenameFromView($viewName, $isInternal);
         $script = "<script src='" . TCache::absoluteURL($cacheJsFilename) . "'></script>" . PHP_EOL;
 
-        $ok = $this->safeCopy($this->getJsControllerFileName(), $cacheJsFilename);
+        $ok = $this->safeCopy($jsControllerFileName, $cacheJsFilename);
 
         return ($ok) ? $script : null;
     }
 
-    function getStyleSheetTag(): ?string
+    function getStyleSheetTag(?string $viewName = null, ?bool $isInternal = null): ?string
     {
-        $cacheCssFilename = TCache::cacheCssFilenameFromView($this->getViewName(), $this->isInternalComponent());
+        $cssFileName = '';
+
+        if ($viewName !== null) {
+            $mvc = $this->getMvcFileNamesByViewName($viewName);
+            $cssFileName = $mvc['cssFileName'];
+        }
+
+        if ($viewName === null) {
+            $cssFileName = $this->getCssFileName();
+            $viewName = $this->getViewName();
+        }
+        if ($isInternal === null) {
+            $isInternal = $this->isInternalComponent();
+        }
+
+        $cacheCssFilename = TCache::cacheCssFilenameFromView($viewName, $isInternal);
         $head = "<link rel='stylesheet' href='" . TCache::absoluteURL($cacheCssFilename) . "' />" . PHP_EOL;
 
-        $ok = $this->safeCopy($this->getCssFileName(), $cacheCssFilename);
+        $ok = $this->safeCopy($cssFileName, $cacheCssFilename);
 
         return ($ok) ? $head : null;
     }
-
 
     function appendToBody(string $scripts, string &$viewHtml): void
     {

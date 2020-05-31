@@ -32,8 +32,9 @@ use Reed\Template\TPartialTemplate;
  */
 trait TCodeGenerator
 {
-    private $_reservedKeywords = ['page', 'echo', 'exec', 'type', 'block', 'extends'];
-    //put your code here
+    private $_reservedDeclarationsKeywords = ['page', 'echo', 'exec', 'type', 'block', 'extends'];
+    private $_reservedHtmlKeywords = ['echo', 'exec', 'render', 'block'];
+
     public function writeDeclarations(TXmlDocument $doc, TCustomTemplate $parentTemplate)
     {
 
@@ -59,7 +60,7 @@ trait TCodeGenerator
 
         $isFirst = true;
         foreach ($docList as $control) {
-            if (in_array($control['name'], $this->_reservedKeywords) || $control['method'] == 'render') {
+            if (in_array($control['name'], $this->_reservedDeclarationsKeywords) || $control['method'] == 'render') {
                 continue;
             }
 
@@ -279,7 +280,7 @@ trait TCodeGenerator
             $tag = $match->getMethod();
             $name = $match->getName();
 
-            if ($tag != 'echo' && $tag != 'exec' && $tag != 'render' && $tag != 'block') {
+            if (!in_array($tag, $this->_reservedHtmlKeywords)) {
                 continue;
             }
 

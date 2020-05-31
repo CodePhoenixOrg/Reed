@@ -409,6 +409,34 @@ JSCRIPT;
         $this->getCacheFileName();
     }
 
+    public function getMvcFileNamesByViewName(string $viewName): ?array 
+    {
+        $modelFileName = 'app' . DIRECTORY_SEPARATOR . 'models' . DIRECTORY_SEPARATOR . $viewName . CLASS_EXTENSION;
+        $viewFileName = 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $viewName . PREHTML_EXTENSION;
+        $cssFileName = 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $viewName . CSS_EXTENSION;
+        $controllerFileName = 'app' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR . $viewName . CLASS_EXTENSION;
+        $jsControllerFileName = 'app' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR . $viewName . JS_EXTENSION;
+        if ($this->isInternalComponent()) {
+            $dirName = $this->getDirName();
+            $modelFileName = $dirName . DIRECTORY_SEPARATOR . $modelFileName;
+            $viewFileName = $dirName . DIRECTORY_SEPARATOR . $viewFileName;
+            $cssFileName = $dirName . DIRECTORY_SEPARATOR . $cssFileName;
+            $controllerFileName = $dirName . DIRECTORY_SEPARATOR . $controllerFileName;
+            $jsControllerFileName = $dirName . DIRECTORY_SEPARATOR . $jsControllerFileName;
+        }
+
+        $cacheFileName = SRC_ROOT . TCache::cacheFilenameFromView($viewName);
+
+        return [
+            'modelFileName' => $modelFileName,
+            'viewFileName' => $viewFileName,
+            'controllerFileName' => $controllerFileName,
+            'jsControllerFileName' => $jsControllerFileName,
+            'cssFileName' => $cssFileName,
+            'cacheFileName' => $cacheFileName,
+        ];
+    }
+
     public function getMvcFileNamesByTypeName(?string $typeName = null): ?array
     {
         $result = [];
