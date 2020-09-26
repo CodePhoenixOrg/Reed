@@ -18,6 +18,7 @@
 
 namespace Reed\Template;
 
+use Exception;
 use Reed\Cache\TCache;
 use Reed\Core\TObject;
 use Reed\Registry\TRegistry;
@@ -175,7 +176,7 @@ abstract class TCustomTemplate extends TCustomControl
         }
 
         $fullViewDir = $baseViewDir . pathinfo($this->viewFileName, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR;
-        
+
         $head = $this->getStyleSheetTag();
         $script = $this->getScriptTag();
 
@@ -197,6 +198,9 @@ abstract class TCustomTemplate extends TCustomControl
         if ($firstMatch !== null && $firstMatch->getMethod() === 'extends') {
 
             $masterFilename = $firstMatch->properties('template');
+            if (false === $masterFilename) {
+                throw new Exception("The template property of the extends tag was not found");
+            }
             $masterViewName = pathinfo($masterFilename, PATHINFO_FILENAME);
             $masterHtml = file_get_contents($fullViewDir . $masterFilename);
 
@@ -217,7 +221,6 @@ abstract class TCustomTemplate extends TCustomControl
 
             $doc = new TXmlDocument($this->viewHtml);
             $doc->matchAll();
-
         }
 
         if ($doc->getCount() > 0) {
