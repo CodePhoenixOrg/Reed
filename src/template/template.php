@@ -43,9 +43,9 @@ class TTemplate extends TCustomTemplate
         $this->cloneNamesFrom($parent);
         $this->getCacheFileName();
         $this->cacheFileName = $parent->getCacheFileName();
-        $this->fatherTemplate = $this;
+        $this->fatherTemplate = $parent;
         $this->viewIsFather = true;
-        $this->fatherUID = $this->getUID();
+        $this->fatherUID = $parent->getUID();
 
         TRegistry::importClasses($this->getDirName());
     }
