@@ -16,16 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Phink\Core;
+namespace Reed\Core;
 
-use Reed\Core\TObject;
-use Reed\Registry\TRegistry;
+use FunCom\Element;
+use Reed\Registry\Registry;
 use Reed\Web\IWebObject;
-use Reed\Web\TWebObject;
+use Reed\Web\WebObject;
+use Reed\Web\WebObjectInterface;
+use Reed\Web\WebObjectTrait;
 
-class TRouter extends TObject implements IWebObject
+class Router extends Element implements WebObjectInterface
 {
-    use TWebObject;
+    use WebObjectTrait;
 
     protected $apiName = '';
     protected $baseNamespace = '';
@@ -133,7 +135,7 @@ class TRouter extends TObject implements IWebObject
 
     public function routes(): array
     {
-        $routesArray = TRegistry::item('routes');
+        $routesArray = Registry::item('routes');
 
         if (count($routesArray) === 0 && file_exists(DOCUMENT_ROOT . 'routes.json')) {
             $routesFile = file_get_contents(DOCUMENT_ROOT . 'routes.json');
@@ -169,7 +171,7 @@ class TRouter extends TObject implements IWebObject
         $routesArray['web']['post']["^/admin/qbe/grid/$"] = "@/qbe/app/views/qbe_grid.phtml";
         
         foreach ($routesArray as $key => $value) {
-            TRegistry::write('routes', $key, $value);
+            Registry::write('routes', $key, $value);
         }
 
         if(REWRITE_BASE != '/') {

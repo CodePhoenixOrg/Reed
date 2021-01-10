@@ -1,33 +1,15 @@
 <?php
-/*
- * Copyright (C) 2020 David Blanchard
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 namespace Reed\Template;
 
-use Exception;
-use Reed\Cache\TCache;
-use Reed\Registry\TRegistry;
-use Reed\Web\TWebObject;
-use Reed\Web\UI\TCustomControl;
+use Reed\Registry\Registry;
+use Reed\Web\UI\CustomControl;
+use Reed\Web\WebObjectTrait;
 
-class TTemplateEngine extends TCustomControl
+class TemplateEngine extends CustomControl
 {
 
-    use TWebObject;
+    use WebObjectTrait;
+
     protected $templateContents = '';
 
     public function getTemplate(): string
@@ -35,7 +17,7 @@ class TTemplateEngine extends TCustomControl
         return $this->templateContents;
     }
 
-    public function __construct(TTemplateLoader $loader)
+    public function __construct(TemplateLoader $loader)
     {
         $this->path = $loader->getTemplatePath();
         $this->componentIsInternal = $loader->isInnerTemplate();
@@ -60,15 +42,15 @@ class TTemplateEngine extends TCustomControl
         $this->setNamespace();
         $this->setNames();
 
-        $template = new TTemplate($this, $dictionary);
+        $template = new Template($this, $dictionary);
         $template->parse();
         $creations = $template->getCreations();
         $declarations = $template->getAdditions();
         $php = $template->getViewHtml();
 
-        TRegistry::write('php', $template->getUID(), $php);
+        Registry::write('php', $template->getUID(), $php);
 
-        $filename = $this->getCacheFileName();
+        $filename = CACHE_DIR . $this->viewName . PREHTML_EXTENSION;
 
         file_put_contents($filename, $php);
 

@@ -1,42 +1,16 @@
 <?php
-/*
- * Copyright (C) 2020 David Blanchard
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 namespace Reed\Core;
 
 use \ReflectionClass;
-use DateTime;
-use Reed\Registry\TRegistry;
+use Reed\Registry\Registry;
 
-interface IObject
-{
-    function getUID(): string;
-    function getId(): string;
-    function getParent(): ?IObject;
-    // function setParent(IObject $parent) : void;
-    function getType(): string;
-}
 /**
  * Description of TObject
  *
  * @author david
  */
 
-class TObject extends TStaticObject implements IObject
+class Item extends StaticObject implements ItemInterface
 {
     private $_reflection = null;
     protected $parent = null;
@@ -48,7 +22,7 @@ class TObject extends TStaticObject implements IObject
     protected $fqClassName = '';
     protected static $instance = null;
 
-    public function __construct(IObject $parent = null)
+    public function __construct(ItemInterface $parent = null)
     {
         $this->parent = $parent;
         $this->uid = uniqid(rand(), true);
@@ -69,7 +43,7 @@ class TObject extends TStaticObject implements IObject
 
     public function setId($value): void
     {
-        //TObject::$logger->dump(__CLASS__ . ':' . __METHOD__, $value);
+        //Element::$logger->dump(__CLASS__ . ':' . __METHOD__, $value);
         $this->id = $value;
     }
 
@@ -100,17 +74,17 @@ class TObject extends TStaticObject implements IObject
     }
 
 
-    public function getParent(): ?IObject
+    public function getParent(): ?ItemInterface
     {
         return $this->parent;
     }
 
-    public function addChild(IObject $child)
+    public function addChild(ItemInterface $child)
     {
         $this->children[$child->getId()] = $child;
     }
 
-    public function removeChild(IObject $child): void
+    public function removeChild(ItemInterface $child): void
     {
         unset($this->children[$child->getId()]);
     }
@@ -219,8 +193,8 @@ class TObject extends TStaticObject implements IObject
     {
         $classText = file_get_contents($filename);
 
-        $namespace = TObject::grabKeywordName('namespace', $classText, ';');
-        $className = TObject::grabKeywordName('class', $classText, ' ');
+        $namespace = Element::grabKeywordName('namespace', $classText, ';');
+        $className = Element::grabKeywordName('class', $classText, ' ');
 
         return [$namespace, $className, $classText];
     }
@@ -271,7 +245,7 @@ class TObject extends TStaticObject implements IObject
             return null;
         }
 
-        list($namespace, $className, $code) = TObject::getClassDefinition($classFilename);
+        list($namespace, $className, $code) = Element::getClassDefinition($classFilename);
 
         $fqClassName = trim($namespace) . "\\" . trim($className);
 
@@ -279,10 +253,10 @@ class TObject extends TStaticObject implements IObject
 
         if (isset($params) && ($params && RETURN_CODE === RETURN_CODE)) {
             $code = substr(trim($code), 0, -2) . PHP_EOL . CONTROL_ADDITIONS;
-            TRegistry::setCode($filename, $code);
+            Registry::setCode($filename, $code);
         }
 
-        TObject::getLogger()->debug(__METHOD__ . '::' . $filename, __FILE__, __LINE__);
+        Element::getLogger()->debug(__METHOD__ . '::' . $filename, __FILE__, __LINE__);
 
         if ((isset($params) && ($params && INCLUDE_FILE === INCLUDE_FILE)) && !class_exists('\\' . $fqClassName)) {
             if (\Phar::running() != '') {

@@ -1,41 +1,25 @@
 <?php
-/*
- * Copyright (C) 2020 David Blanchard
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 
 namespace Reed\Web\UI;
 
 use Exception;
-use Reed\Cache\TCache;
-use Reed\Registry\TRegistry;
-use Reed\Xml\TXmlDocument;
-use Reed\Template\TCustomTemplate;
-use Reed\Template\TPartialTemplate;
+use Reed\Cache\Cache;
+use Reed\Registry\Registry;
+use Reed\Xml\XmlDocument;
+use Reed\Template\CustomTemplate;
+use Reed\Template\PartialTemplate;
 
 /**
  * Description of code_generator
  *
  * @author David
  */
-trait TCodeGenerator
+trait CodeGeneratorTrait
 {
     private $_reservedDeclarationsKeywords = ['page', 'echo', 'exec', 'type', 'block', 'extends'];
     private $_reservedHtmlKeywords = ['echo', 'exec', 'render', 'block'];
 
-    public function writeDeclarations(TXmlDocument $doc, TCustomTemplate $parentTemplate)
+    public function writeDeclarations(XmlDocument $doc, CustomTemplate $parentTemplate)
     {
 
         $result = '';
@@ -101,27 +85,27 @@ trait TCodeGenerator
                 $className = $control['name'];
                 $fqcn = '';
                 $code  = '';
-                $info = TRegistry::classInfo($className);
+                $info = Registry::classInfo($className);
                 //self::$logger->dump('REGISTRY INFO ' . $className, $info);
                 if ($info) {
                     if (!$info->isAutoloaded) {
-                        array_push($requires, '\\Reed\\TCustomTemplate::import($this, "' . $className . '");');
+                        array_push($requires, '\\Reed\\CustomTemplate::import($this, "' . $className . '");');
                         //                        array_push($requires, '$this->import("' . $className . '");');
                     }
                     $fqcn = $info->namespace . '\\' . $className;
                 } elseif ($className !== 'this') {
-                    $viewName = TCustomTemplate::userClassNameToFilename($className);
-                    $view = new TPartialTemplate($parentTemplate, [], $className);
+                    $viewName = CustomTemplate::userClassNameToFilename($className);
+                    $view = new PartialTemplate($parentTemplate, [], $className);
                     $view->setNames();
                     $fullClassPath = $view->getControllerFileName();
                     $fullJsClassPath = $view->getJsControllerFileName();
 
-                    $fullJsCachePath = TCache::cacheJsFilenameFromView($viewName, $parentTemplate->isInternalComponent());
-                    array_push($requires, '\\Reed\\TCustomTemplate::import($this, "' . $className . '");');
+                    $fullJsCachePath = Cache::cacheJsFilenameFromView($viewName, $parentTemplate->isInternalComponent());
+                    array_push($requires, '\\Reed\\CustomTemplate::import($this, "' . $className . '");');
 
                     self::getLogger()->dump('FULL_CLASS_PATH', $fullClassPath);
 
-                    list($file, $fqcn, $code) = TCustomTemplate::includeClass($fullClassPath, RETURN_CODE);
+                    list($file, $fqcn, $code) = CustomTemplate::includeClass($fullClassPath, RETURN_CODE);
 
                     self::getLogger()->dump('FULL_QUALIFIED_CLASS_NAME: ', $fqcn);
 
@@ -136,7 +120,7 @@ trait TCodeGenerator
                         copy(SITE_ROOT . $fullJsClassPath, DOCUMENT_ROOT . $fullJsCachePath);
                         $parentTemplate->getResponse()->addScriptFirst($fullJsCachePath);
                     }
-                    TRegistry::setCode($view->getUID(), $code);
+                    Registry::setCode($view->getUID(), $code);
                 }
 
                 $canRender = ($info && $info->canRender || !$info);
@@ -161,7 +145,7 @@ trait TCodeGenerator
                 foreach ($properties as $key => $value) {
                     if ($key == 'id') {
                         if ($serialize) {
-                            array_push($creations[$j], 'if(!' . $thisControl . ' = \Reed\Core\TObject::wakeUp("' . $value . '")) {');
+                            array_push($creations[$j], 'if(!' . $thisControl . ' = \FunCom\Element::wakeUp("' . $value . '")) {');
                         }
                         if ($notThis) {
                             array_push($creations[$j], $thisControl . ' = new \\' . $fqcn . '($this); ');
@@ -213,7 +197,7 @@ trait TCodeGenerator
                 array_push($additions[$j], '$this->addChild(' . $thisControl . ');');
                 if ($canRender && $className !== 'this') {
                     array_push($additions[$j], '$html = ' .  $thisControl . '->getHtml();');
-                    array_push($additions[$j], '\\Reed\\Registry\\TRegistry::push("' . $uid . '", "' . $controlId . '", $html);');
+                    array_push($additions[$j], '\\Reed\\Registry\\Registry::push("' . $uid . '", "' . $controlId . '", $html);');
                 }
 
                 $creations[$j] = implode(PHP_EOL, $creations[$j]);
@@ -223,7 +207,7 @@ trait TCodeGenerator
 
 
             $method = $docList[$j]['method'];
-            if ((TRegistry::classInfo($method) && TRegistry::classCanRender($method)) || !TRegistry::classInfo($method)) {
+            if ((Registry::classInfo($method) && Registry::classCanRender($method)) || !Registry::classInfo($method)) {
                 $doc->fieldValue($j, 'method', 'render');
             }
         }
@@ -262,7 +246,7 @@ trait TCodeGenerator
         return (object) ['creations' => $objectCreation, 'additions' => $objectAdditions, 'afterBinding' => $objectAfterBiding];
     }
 
-    public function writeHTML(TXmlDocument $doc, TCustomTemplate $parentTemplate)
+    public function writeHTML(XmlDocument $doc, CustomTemplate $parentTemplate)
     {
         $dictionary = $parentTemplate->getDictionary();
         $viewHtml = $parentTemplate->getViewHtml();
@@ -308,7 +292,7 @@ trait TCodeGenerator
             } elseif ($tag == 'echo' && $var) {
                 /** $declare = '<?php echo ' . $type . $var . '; ?>';  */
 
-                $declare = '<?php echo \\Reed\\Registry\\TRegistry::read("template", "' . $uid . '")["' . $var . '"];?>';
+                $declare = '<?php echo \\Reed\\Registry\\Registry::read("template", "' . $uid . '")["' . $var . '"];?>';
             } elseif ($tag == 'echo' && $prop) {
                 $declare = '<?php echo ' . $type . 'get' . ucfirst($prop) . '(); ?>';
             } elseif ($tag == 'exec') {
@@ -325,7 +309,7 @@ trait TCodeGenerator
                     $declare = '<?php $this->renderHtml(); $this->renderedHtml(); ?>';
                 } else {
                     /** $declare = '<?php ' . $type . $id . '->render(); ?>'; */
-                    $declare = '<?php echo \\Reed\\Registry\\TRegistry::read("' . $uid . '", "' . $id . '")[0];?>';
+                    $declare = '<?php echo \\Reed\\Registry\\Registry::read("' . $uid . '", "' . $id . '")[0];?>';
                 }
             }
 

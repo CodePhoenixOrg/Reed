@@ -1,46 +1,30 @@
 <?php
-/*
- * Copyright (C) 2020 David Blanchard
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 namespace Reed\Web\UI;
 
-use Reed\Cache\TCache;
+use FunCom\ElementInterface;
+use Reed\Cache\Cache;
 use Reed\Core\IObject;
-use Reed\Registry\TRegistry;
-use Reed\Template\TCustomTemplate;
+use Reed\Registry\Registry;
+use Reed\Template\CustomTemplate;
 
 /**
  * Description of custom_control
  *
  * @author David
  */
-abstract class TCustomCachedControl extends TCustomControl
+abstract class CustomCachedControl extends CustomControl
 {
     protected $model = null;
     protected $innerHtml = '';
     protected $viewHtml = '';
     protected $isDeclared = false;
 
-    public function __construct(IObject $parent)
+    public function __construct(ElementInterface $parent)
     {
         parent::__construct($parent);
     }
 
-    public function getView(): ?TCustomTemplate
+    public function getView(): ?CustomTemplate
     {
         return $this->view;
     }
@@ -81,20 +65,20 @@ abstract class TCustomCachedControl extends TCustomControl
             //            $this->partialLoad();
         }
         $uid = ($this->getView() !== null) ? $this->getView()->getUID() : '';
-        if (TRegistry::exists('html', $uid)) {
-            $html = TRegistry::getHtml($uid);
+        if (Registry::exists('html', $uid)) {
+            $html = Registry::getHtml($uid);
             eval('?>' . $html);
         } else {
             $this->displayHtml();
         }
 
         $html = ob_get_clean();
-        // TWebObject::register($this);
+        // WebObject::register($this);
 
         $this->unload();
 
         if (file_exists(SRC_ROOT . $this->getJsControllerFileName())) {
-            $cacheJsFilename = TCache::cacheJsFilenameFromView($this->viewName, $this->isInternalComponent());
+            $cacheJsFilename = Cache::cacheJsFilenameFromView($this->viewName, $this->isInternalComponent());
             if (!file_exists(DOCUMENT_ROOT . $cacheJsFilename)) {
                 copy(SRC_ROOT . $this->getJsControllerFileName(), DOCUMENT_ROOT . $cacheJsFilename);
             }
@@ -116,7 +100,7 @@ abstract class TCustomCachedControl extends TCustomControl
 
         $this->renderHtml();
 
-        //TWebObject::register($this);
+        //WebObject::register($this);
 
         $this->unload();
     }
@@ -160,8 +144,8 @@ abstract class TCustomCachedControl extends TCustomControl
 
             if ($this->view->isReedEngine()) {
                 $uid = $this->getView()->getUID();
-                if (TRegistry::exists('html', $uid)) {
-                    $php = TRegistry::getHtml($uid);
+                if (Registry::exists('html', $uid)) {
+                    $php = Registry::getHtml($uid);
                     eval('?>' . $php); 
                 } else {
                     $this->displayHtml();
@@ -171,10 +155,10 @@ abstract class TCustomCachedControl extends TCustomControl
                 echo $html;
             }
 
-            //TWebObject::register($this);
+            //WebObject::register($this);
 
             if ($this->getParent()->isFatherTemplate()) {
-                TRegistry::dump($this->getUID());
+                Registry::dump($this->getUID());
             }
 
             $this->unload();

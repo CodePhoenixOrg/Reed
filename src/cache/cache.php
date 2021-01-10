@@ -1,31 +1,13 @@
 <?php
 
-/*
- * Copyright (C) 2020 David Blanchard
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 namespace Reed\Cache;
 
-use Reed\Core\TObject;
-use Reed\Utils\TFileUtils;
-use Reed\Core\TStaticObject;
-use Reed\Web\IWebObject;
-use Reed\Web\UI\TCustomCachedControl;
+use FunCom\IO\Utils;
+use Reed\Core\StaticObject;
+use Reed\Web\UI\CustomCachedControl;
+use Reed\Web\WebObjectInterface;
 
-class TCache extends TStaticObject
+class Cache extends StaticObject
 {
 
     public static function cacheFilenameFromView(string $viewName, bool $isFrameworkComponent = false): string
@@ -116,21 +98,21 @@ class TCache extends TStaticObject
         try {
 
             if (file_exists(RUNTIME_DIR)) {
-                $ok = TFileUtils::delTree(RUNTIME_DIR);
+                $ok = Utils::delTree(RUNTIME_DIR);
                 $result = $result || $ok;
             } else {
                 $error_dir[] = RUNTIME_DIR;
             }
 
             if (file_exists(RUNTIME_JS_DIR)) {
-                $ok = TFileUtils::delTree(RUNTIME_JS_DIR);
+                $ok = Utils::delTree(RUNTIME_JS_DIR);
                 $result = $result || $ok;
             } else {
                 $error_dir[] = RUNTIME_JS_DIR;
             }
 
             if (file_exists(RUNTIME_CSS_DIR)) {
-                $ok = TFileUtils::delTree(RUNTIME_CSS_DIR);
+                $ok = Utils::delTree(RUNTIME_CSS_DIR);
                 $result = $result || $ok;
             } else {
                 $error_dir[] = RUNTIME_CSS_DIR;
@@ -202,7 +184,7 @@ class TCache extends TStaticObject
         try {
 
             if (file_exists(CACHE_DIR)) {
-                $ok = TFileUtils::delTree(CACHE_DIR);
+                $ok = Utils::delTree(CACHE_DIR);
                 $result = $result || $ok;
             } else {
                 $error_dir[] = CACHE_DIR;
@@ -212,7 +194,7 @@ class TCache extends TStaticObject
                 $result = false;
 
                 $message = 'Permission denied while deleting ' . implode(', ', $error_dir);
-                throw new \Exception($message, 0, $ex);
+                throw new \Exception($message, 0);
             }
         } catch (\Exception $ex) {
             self::getLogger()->error($ex);
@@ -221,7 +203,7 @@ class TCache extends TStaticObject
         return $result;
     }
 
-    public static function loadCachedFile(IWebObject $parent): TCustomCachedControl
+    public static function loadCachedFile(WebObjectInterface $parent): CustomCachedControl
     {
         self::getLogger()->dump('PARENT OBJECT', $parent->getType());
         self::getLogger()->dump('PARENT OBJECT', $parent->getClassName());
@@ -230,7 +212,7 @@ class TCache extends TStaticObject
         $cacheFilename = $parent->getCacheFilename();
         self::getLogger()->debug('CACHE FILE NAME TO INCLUDE: ' . $cacheFilename);
 
-        list($namespace, $className, $code) = TObject::getClassDefinition($cacheFilename);
+        list($namespace, $className, $code) = Element::getClassDefinition($cacheFilename);
 
         include $cacheFilename;
 

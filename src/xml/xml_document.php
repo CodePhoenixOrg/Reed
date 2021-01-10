@@ -1,22 +1,5 @@
 <?php
 /*
- * Copyright (C) 2020 David Blanchard
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-/*
     Possible regex to replace the strpos based method stuff
     $re = '/(<phx:element.[^>]+?[^\/]>)(.*?)(<\/phx:element>)|(<phx:.+?>)|(<\/phx:\w+>)/is';
     preg_match_all($re, $str, $matches, PREG_SET_ORDER, 0);
@@ -25,8 +8,8 @@
 
 namespace Reed\Xml;
 
-use Reed\Registry\TRegistry;
-use Reed\Core\TObject;
+use Reed\Registry\Registry;
+use FunCom\Element;
 
 /**
  * Description of axmldocument
@@ -46,14 +29,7 @@ define('STR_EMPTY', '');
 define('STR_SPACE', ' ');
 define('TAG_PATTERN_ANY', "phx:");
 
-class TXmlElementPos
-{
-    const None = 0;
-    const Open = 1;
-    const Close = 2;
-}
-
-class TXmlDocument extends TObject
+class XmlDocument extends Element
 {
     private $_count = 0;
     private $_cursor = 0;
@@ -80,7 +56,7 @@ class TXmlDocument extends TObject
         return $this->_matches;
     }
 
-    public function getMatchById(int $id): ?TXmlMatch
+    public function getMatchById(int $id): ?XmlMatch
     {
         $match = null;
 
@@ -88,7 +64,7 @@ class TXmlDocument extends TObject
             return $match;
         }
 
-        $match = new TXmlMatch($this->_list[$id]);
+        $match = new XmlMatch($this->_list[$id]);
 
         return $match;
     }
@@ -177,17 +153,17 @@ class TXmlDocument extends TObject
         $this->_currentMatchKey = -1;
     }
 
-    public function getCurrentMatch(): ?TXmlMatch
+    public function getCurrentMatch(): ?XmlMatch
     {
         $currentId = $this->_matchesById[$this->_currentMatchKey];
         if ($this->_match === null || $this->_match->getId() !== $currentId) {
-            $this->_match = new TXmlMatch($this->_list[$currentId]);
+            $this->_match = new XmlMatch($this->_list[$currentId]);
         }
 
         return $this->_match;
     }
 
-    public function getNextMatch(): ?TXmlMatch
+    public function getNextMatch(): ?XmlMatch
     {
         $this->_currentMatchKey++;
 
@@ -199,7 +175,7 @@ class TXmlDocument extends TObject
         return $this->getCurrentMatch();
     }
 
-    public function replaceMatches(TXmlDocument $doc, string $text): string
+    public function replaceMatches(XmlDocument $doc, string $text): string
     {
         $masterMatchesById = $this->getIDsOfMatches();
         $masterCount = $this->getCount();
@@ -259,7 +235,7 @@ class TXmlDocument extends TObject
         return $masterText;
     }
 
-    public function replaceThisMatch(TXmlMatch $match, string $text, string $replacing): string
+    public function replaceThisMatch(XmlMatch $match, string $text, string $replacing): string
     {
         if ($match->hasCloser()) {
             $start = $match->getStart();
@@ -279,8 +255,8 @@ class TXmlDocument extends TObject
                 && $previousMatchId != $match->getId()
             ) {
                 $replacingLength = $closer['startsAt'] - $match->getEnd() - 1;
-                TXmlDocument::getLogger()->debug("replacing on " . $match->getId() . "::");
-                TXmlDocument::getLogger()->debug($replacing);
+                XmlDocument::getLogger()->debug("replacing on " . $match->getId() . "::");
+                XmlDocument::getLogger()->debug($replacing);
 
                 if (
                     $match->getDepth() !== $this->_list[$previousMatchId]['depth']
@@ -303,11 +279,11 @@ class TXmlDocument extends TObject
 
                     $replacing = $patchReplacing;
 
-                    TXmlDocument::getLogger()->debug("patch replacing on " . $match->getId() . "::");
-                    TXmlDocument::getLogger()->debug($patchReplacing);
+                    XmlDocument::getLogger()->debug("patch replacing on " . $match->getId() . "::");
+                    XmlDocument::getLogger()->debug($patchReplacing);
                 }
 
-                TXmlDocument::getLogger()->debug($offset);
+                XmlDocument::getLogger()->debug($offset);
             }
 
             $replaced = substr($text, $start, $length);
@@ -425,7 +401,7 @@ class TXmlDocument extends TObject
             }
             $this->_list[$i]['parentId'] = $parentId[$depth];
             $this->_list[$i]['isSibling'] = $isSibling;
-            $this->_list[$i]['isRegistered'] = TRegistry::classInfo($this->_list[$i]['name']) !== null;
+            $this->_list[$i]['isRegistered'] = Registry::classInfo($this->_list[$i]['name']) !== null;
 
             $this->_list[$i]['properties'] = $properties;
 

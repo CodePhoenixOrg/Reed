@@ -1,25 +1,8 @@
 <?php
-/*
- * Copyright (C) 2020 David Blanchard
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 
 namespace Reed\Registry;
 
-use Reed\Core\TStaticObject;
+use Reed\Core\StaticObject;
 
 /**
  * Description of registry
@@ -27,7 +10,7 @@ use Reed\Core\TStaticObject;
  * @author david
  */
 
-class TRegistry extends TStaticObject
+class Registry extends StaticObject
 {
     private static $_classRegistry = null;
     private static $_code = [];
@@ -40,57 +23,6 @@ class TRegistry extends TStaticObject
             return true;
         }
 
-        self::importClasses(PHINK_VENDOR_WIDGETS);
-
-        self::write(
-            'classes',
-            'TPluginRenderer',
-            [
-                'alias' => 'pluginrenderer',
-                'path' => 'web' . DIRECTORY_SEPARATOR . 'ui' . DIRECTORY_SEPARATOR,
-                'namespace' => ROOT_NAMESPACE . '\Web\UI',
-                'hasTemplate' => false,
-                'canRender' => true,
-                'isAutoloaded' => true
-            ]
-        );
-        self::write(
-            'classes',
-            'TPlugin',
-            [
-                'alias' => 'plugin',
-                'path' => 'web' . DIRECTORY_SEPARATOR . 'ui' . DIRECTORY_SEPARATOR . 'widget' . DIRECTORY_SEPARATOR . 'plugin' . DIRECTORY_SEPARATOR,
-                'namespace' => ROOT_NAMESPACE . '\Web\UI\Widget\Plugin',
-                'hasTemplate' => true,
-                'canRender' => true,
-                'isAutoloaded' => true
-            ]
-        );
-        self::write(
-            'classes',
-            'TPluginChild',
-            [
-                'alias' => 'pluginchild',
-                'path' => 'web' . DIRECTORY_SEPARATOR . 'ui' . DIRECTORY_SEPARATOR . 'widget' . DIRECTORY_SEPARATOR . 'plugin' . DIRECTORY_SEPARATOR,
-                'namespace' => ROOT_NAMESPACE . '\Web\UI\Widget\Plugin',
-                'hasTemplate' => false,
-                'canRender' => false,
-                'isAutoloaded' => true
-            ]
-        );
-        self::write(
-            'classes',
-            'TUserComponent',
-            [
-                'alias' => 'component',
-                'path' => 'web' . DIRECTORY_SEPARATOR . 'ui' . DIRECTORY_SEPARATOR . 'widget' . DIRECTORY_SEPARATOR . 'user_component' . DIRECTORY_SEPARATOR,
-                'namespace' => ROOT_NAMESPACE . '\Web\UI\Widget\UserComponent',
-                'hasTemplate' => false,
-                'canRender' => true,
-                'isAutoloaded' => true
-            ]
-        );
-
         self::$_isInit = true;
 
         return self::$_isInit;
@@ -98,72 +30,22 @@ class TRegistry extends TStaticObject
 
     public static function importClasses(string $dirName): void
     {
-        $localRegistryFilename = SITE_ROOT . $dirName . '/app/registry.json';
-
-        if (!file_exists($localRegistryFilename)) {
-            $localRegistryFilename = SITE_ROOT . $dirName . '/registry.json';
-        }
-
-        if (!file_exists($localRegistryFilename)) {
-            return;
-        }
-
-        // self::getLogger()->debug('LOCAL REGISTRY::' . $localRegistryFilename);
-
-        $localRegistryContents = \file_get_contents($localRegistryFilename);
-        // self::getLogger()->dump('LOCAL REGISTRY CONTENTS', $localRegistryContents);
-
-        $registry = (!empty($localRegistryContents)) ? json_decode($localRegistryContents, true) : [];
-        // self::getLogger()->dump('LOCAL REGISTRY ARRAY', $registry);
-
-        if ($registry === null) {
-            return;
-        }
-
-        $classes = count($registry['classes']) > 0 ? $registry['classes'][0] : [];
-
-        foreach ($classes as $type => $class) {
-            $info = new TClassInfo([$type => $class]);
-            if ($info->isValid()) {
-                self::registerClass($info);
-            }
-        }
     }
 
-    public static function registerClass(TClassInfo $info)
+    public static function registerClass(ClassInfo $info)
     {
-        self::write('classes', $info->getType(), [
-            'alias' => $info->getAlias(),
-            'path' => $info->getPath(),
-            'namespace' => $info->getNamespace(),
-            'hasTemplate' => $info->hasTemplate(),
-            'canRender' => $info->canRender(),
-            'isAutoloaded' => $info->isAutoloaded()
-        ]);
-        self::write('classes', $info->getAlias(), ['type' => $info->getType()]);
     }
 
     public static function classInfo(string &$className = '')
     {
         $result = null;
 
-        if (self::init() && isset(self::$_items['classes'][$className])) {
-            $result = self::$_items['classes'][$className];
-            if (isset($result['type'])) {
-                $className = $result['type'];
-                $result = self::$_items['classes'][$result['type']];
-            }
-
-            $result = (object) $result;
-        }
-
         return $result;
     }
 
     public static function widgetPath($className): string
     {
-        $result = TRegistry::classPath($className);
-        $result = \str_replace("~/", Reed_WIDGETS_ROOT, $result);
+        $result = '';
 
         return $result;
     }
@@ -213,7 +95,7 @@ class TRegistry extends TStaticObject
 
     public static function setHtml($id, $value): void
     {
-        
+
         self::write('html', $id, $value);
     }
 
@@ -269,7 +151,7 @@ class TRegistry extends TStaticObject
         if (!isset(self::$_items[$item][$key])) {
             self::$_items[$item][$key] = $value;
         }
-        
+
         if (isset(self::$_items[$item][$key]) && !is_array(self::$_items[$item][$key])) {
             $tmp = self::$_items[$item][$key];
             self::$_items[$item][$key] = [];
@@ -351,11 +233,11 @@ class TRegistry extends TStaticObject
 
     public static function clear(): void
     {
-        TRegistry::$_items = [];
+        Registry::$_items = [];
     }
 
     public static function dump(string $key): void
     {
-        self::getLogger()->dump('Registry key ' . $key, TRegistry::item($key));
+        self::getLogger()->dump('Registry key ' . $key, Registry::item($key));
     }
 }

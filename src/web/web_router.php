@@ -1,35 +1,19 @@
 <?php
-/*
- * Copyright (C) 2020 David Blanchard
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 namespace Reed\Web;
 
-use Reed\Core\TRouter;
-use Reed\MVC\TCustomView;
-use Reed\Registry\TRegistry;
-use Reed\TAutoloader;
-use Reed\MVC\TView;
+use Reed\Core\Router;
+use Reed\MVC\CustomView;
+use Reed\Registry\Registry;
+use Reed\Autoloader;
+use Reed\Core\Autoloader as CoreAutoloader;
+use Reed\MVC\View;
 
 /**
  * Description of router
  *
  * @author David
  */
-class TWebRouter extends TRouter
+class WebRouter extends Router
 {
     private $_isCached = false;
 
@@ -83,7 +67,7 @@ class TWebRouter extends TRouter
         }
 
         if (file_exists($dir . 'bootstrap' . CLASS_EXTENSION)) {
-            list($namespace, $className, $classText) = TAutoloader::getClassDefinition($dir . 'bootstrap' . CLASS_EXTENSION);
+            list($namespace, $className, $classText) = CoreAutoloader::getClassDefinition($dir . 'bootstrap' . CLASS_EXTENSION);
             include $dir . 'bootstrap' . CLASS_EXTENSION;
 
             $bootstrapClass = $namespace . '\\'  . $className;
@@ -95,18 +79,18 @@ class TWebRouter extends TRouter
         $view = new TView($this);
 
         if ($this->_isCached) {
-            $class = TAutoloader::loadCachedFile($view);
+            $class = Autoloader::loadCachedFile($view);
             $class->perform();
             return true;
         }
 
         list($file, $class, $classText) = $this->includeController($view);
-        $namespace = TAutoloader::grabKeywordName('namespace', $classText, ';');
-        $className = TAutoloader::grabKeywordName('class', $classText, ' ');
+        $namespace = Autoloader::grabKeywordName('namespace', $classText, ';');
+        $className = Autoloader::grabKeywordName('class', $classText, ' ');
 
         $view->parse();
         $uid = $view->getUID();
-        $code = TRegistry::getCode($uid);
+        $code = Registry::getCode($uid);
 
         // file_put_contents($this->getCacheFileName(), $code);
 
@@ -120,7 +104,7 @@ class TWebRouter extends TRouter
 
         if ($view->isReedEngine()) {
             // cache the file
-            $php = TRegistry::getHtml($uid);
+            $php = Registry::getHtml($uid);
             $code = str_replace(HTML_PLACEHOLDER, $php, $code);
             file_put_contents($this->getCacheFileName(), $code);
         }
@@ -157,25 +141,25 @@ class TWebRouter extends TRouter
         $this->namespace .= '\\Controllers';
     }
 
-    public function includeController(TCustomView $view): ?array
+    public function includeController(CustomView $view): ?array
     {
         $file = '';
         $type = '';
         $code = '';
 
 
-        $result = TAutoloader::includeViewClass($view, RETURN_CODE);
+        $result = Autoloader::includeViewClass($view, RETURN_CODE);
         if ($result !== null) {
             list($file, $type, $code) = $result;
         }
         if ($result === null) {
             if ($this->isClientTemplate() && $this->request->isPartialView()) {
-                list($file, $type, $code) = TAutoloader::includeDefaultPartialController($this->namespace, $this->className);
+                list($file, $type, $code) = Autoloader::includeDefaultPartialController($this->namespace, $this->className);
             } else {
-                list($file, $type, $code) = TAutoloader::includeDefaultController($this->namespace, $this->className);
+                list($file, $type, $code) = Autoloader::includeDefaultController($this->namespace, $this->className);
             }
 
-            TRegistry::setCode($view->getUID(), $code);
+            Registry::setCode($view->getUID(), $code);
         }
 
         return [$file, $type, $code];

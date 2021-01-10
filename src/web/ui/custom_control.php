@@ -1,37 +1,21 @@
 <?php
-/*
- * Copyright (C) 2020 David Blanchard
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 namespace Reed\Web\UI;
 
-use Reed\Core\IObject;
-use Reed\Core\TObject;
-use Reed\Web\IWebObject;
+use FunCom\ElementInterface;
+use FunCom\Element;
+use Reed\Web\WebObjectInterface;
+use Reed\Web\WebObjectTrait;
 
 /**
  * Description of custom_control
  *
  * @author David
  */
-abstract class TCustomControl extends TObject implements IWebObject
+abstract class CustomControl extends Element implements WebObjectInterface
 {
-    use \Reed\Web\TWebObject;
+    use WebObjectTrait;
 
-    public function __construct(IObject $parent)
+    public function __construct(ElementInterface $parent)
     {
         parent::__construct($parent);
 

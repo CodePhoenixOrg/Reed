@@ -1,21 +1,4 @@
 <?php
-/*
- * Copyright (C) 2020 David Blanchard
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 namespace Reed\Web;
 
 /**
@@ -24,15 +7,15 @@ namespace Reed\Web;
  * @author david
  */
 
-use Reed\Cache\TCache;
-use Reed\Core\TObject;
-use Reed\Registry\TRegistry;
+use Reed\Cache\Cache;
+use FunCom\Element;
+use Reed\Registry\Registry;
 use Reed\Template\ETemplateType;
-use Reed\Template\TCustomTemplate;
+use Reed\Template\CustomTemplate;
 
-trait TWebObject
+trait WebObjectTrait
 {
-    use THttpTransport;
+    use HttpTransportTrait;
 
     private static $_pageNumber;
     private static $_pageCount;
@@ -82,20 +65,20 @@ trait TWebObject
             $view = $this->getFatherTemplate();
             $uid = $view->getUID();
 
-            if (!TRegistry::exists('html', $uid)) {
+            if (!Registry::exists('html', $uid)) {
                 return;
             }
 
-            $scriptURI = TCache::absoluteURL($script);
+            $scriptURI = Cache::absoluteURL($script);
             $jscall = <<<JSCRIPT
             <script type='text/javascript' src='{$scriptURI}'></script>
 JSCRIPT;
 
-            $html = TRegistry::getHtml($uid);
+            $html = Registry::getHtml($uid);
 
             if ($jscall !== null) {
                 $view->appendToBody($jscall, $html);
-                TRegistry::setHtml($uid, $html);
+                Registry::setHtml($uid, $html);
                 file_put_contents($lock, date('Y-m-d h:i:s'));
             }
         }
@@ -110,7 +93,7 @@ JSCRIPT;
             if ($viewName === null) {
                 $viewName = $this->viewName;
             }
-            $this->cacheFileName = SRC_ROOT . TCache::cacheFilenameFromView($this->viewName, $this->isInternalComponent());
+            $this->cacheFileName = SRC_ROOT . Cache::cacheFilenameFromView($this->viewName, $this->isInternalComponent());
         }
         return $this->cacheFileName;
     }
@@ -121,7 +104,7 @@ JSCRIPT;
             if ($viewName === null) {
                 $viewName = $this->viewName;
             }
-            $this->jsCacheFileName = TCache::cacheJsFilenameFromView($viewName, $this->isInternalComponent());
+            $this->jsCacheFileName = Cache::cacheJsFilenameFromView($viewName, $this->isInternalComponent());
         }
         return $this->jsCacheFileName;
     }
@@ -132,12 +115,12 @@ JSCRIPT;
             if ($viewName === null) {
                 $viewName = $this->viewName;
             }
-            $this->cssCacheFileName = TCache::cacheCssFilenameFromView($viewName, $this->isInternalComponent());
+            $this->cssCacheFileName = Cache::cacheCssFilenameFromView($viewName, $this->isInternalComponent());
         }
         return $this->cssCacheFileName;
     }
 
-    public function getFatherTemplate(): ?TCustomTemplate
+    public function getFatherTemplate(): ?CustomTemplate
     {
         return $this->fatherTemplate;
     }
@@ -285,12 +268,12 @@ JSCRIPT;
         $dummy = 0;
         if (!empty($className)) {
 
-            $info = TRegistry::classInfo($className);
+            $info = Registry::classInfo($className);
             if ($info !== null) {
-                $this->viewName = TCustomTemplate::innerClassNameToFilename($className);
+                $this->viewName = CustomTemplate::innerClassNameToFilename($className);
             }
             if ($info === null) {
-                $this->viewName = TCustomTemplate::userClassNameToFilename($className);
+                $this->viewName = CustomTemplate::userClassNameToFilename($className);
             }
             return;
         }
@@ -340,7 +323,7 @@ JSCRIPT;
         $this->namespace = $this->getFileNamespace();
 
         if (!isset($this->namespace)) {
-            $this->namespace = TObject::getDefaultNamespace();
+            $this->namespace = Element::getDefaultNamespace();
         }
     }
 
@@ -373,9 +356,9 @@ JSCRIPT;
         }
 
         if (!file_exists(SITE_ROOT . $this->viewFileName) && !file_exists(SRC_ROOT . $this->viewFileName)) {
-            $info = TRegistry::classInfo($this->className);
+            $info = Registry::classInfo($this->className);
             if ($info !== null) {
-                // $this->viewName = \Reed\TCustomTemplate::classNameToFilename($this->className);
+                // $this->viewName = \Reed\CustomTemplate::classNameToFilename($this->className);
                 if ($info->path[0] == '@') {
                     $path = str_replace("@" . DIRECTORY_SEPARATOR, PHINK_VENDOR_APPS, $info->path) . 'app' . DIRECTORY_SEPARATOR;
                     $this->controllerFileName = $path . 'controllers' . DIRECTORY_SEPARATOR . $this->viewName . CLASS_EXTENSION;
@@ -389,7 +372,7 @@ JSCRIPT;
                     $this->cssFileName = $path . 'views' . DIRECTORY_SEPARATOR . $this->viewName . CSS_EXTENSION;
                     $this->viewFileName = $path . 'views' . DIRECTORY_SEPARATOR . $this->viewName . PREHTML_EXTENSION;
                 } else {
-                    $this->viewName = \Reed\TCustomTemplate::innerClassNameToFilename($this->className);
+                    $this->viewName = CustomTemplate::innerClassNameToFilename($this->className);
 
                     $path = PHINK_VENDOR_LIB . $info->path;
                     $this->controllerFileName = $path . $this->viewName . CLASS_EXTENSION;
@@ -425,7 +408,7 @@ JSCRIPT;
             $jsControllerFileName = $dirName . DIRECTORY_SEPARATOR . $jsControllerFileName;
         }
 
-        $cacheFileName = SRC_ROOT . TCache::cacheFilenameFromView($viewName);
+        $cacheFileName = SRC_ROOT . Cache::cacheFilenameFromView($viewName);
 
         return [
             'modelFileName' => $modelFileName,
@@ -441,12 +424,12 @@ JSCRIPT;
     {
         $result = [];
 
-        $info = TRegistry::classInfo($typeName);
+        $info = Registry::classInfo($typeName);
         if ($info !== null) {
-            $viewName = TCustomTemplate::innerClassNameToFilename($typeName);
+            $viewName = CustomTemplate::innerClassNameToFilename($typeName);
         }
         if ($info === null) {
-            $viewName = TCustomTemplate::userClassNameToFilename($typeName);
+            $viewName = CustomTemplate::userClassNameToFilename($typeName);
         }
 
         if ($typeName === null) {
@@ -467,9 +450,9 @@ JSCRIPT;
         }
 
         if (!file_exists(SITE_ROOT . $viewFileName) && !file_exists(SRC_ROOT . $viewFileName)) {
-            $info = TRegistry::classInfo($typeName);
+            $info = Registry::classInfo($typeName);
             if ($info !== null) {
-                $viewName = \Reed\TCustomTemplate::innerClassNameToFilename($typeName);
+                $viewName = CustomTemplate::innerClassNameToFilename($typeName);
 
                 if ($info->path[0] == '@') {
                     $path = str_replace("@" . DIRECTORY_SEPARATOR, PHINK_VENDOR_APPS, $info->path) . 'app' . DIRECTORY_SEPARATOR;
@@ -494,7 +477,7 @@ JSCRIPT;
             }
         }
 
-        $cacheFileName = SRC_ROOT . TCache::cacheFilenameFromView($viewName);
+        $cacheFileName = SRC_ROOT . Cache::cacheFilenameFromView($viewName);
 
         return [
             'modelFileName' => $modelFileName,

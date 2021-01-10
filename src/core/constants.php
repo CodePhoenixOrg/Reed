@@ -138,11 +138,11 @@ define('SERVER_ROOT', HTTP_PROTOCOL . '://' . SERVER_NAME . ((HTTP_PORT !== '80'
 define('BASE_URI', SERVER_NAME . ((HTTP_PORT !== '80') ? ':' . HTTP_PORT : '') . ((REQUEST_URI !== '') ? REQUEST_URI : ''));
 define('FULL_URI', HTTP_PROTOCOL . '://' . BASE_URI);
 define('FULL_SSL_URI', 'https://' . BASE_URI);
-define('DEFAULT_MODEL', ROOT_NAMESPACE . '\\MVC\\TModel');
-define('DEFAULT_CONTROLLER', ROOT_NAMESPACE . '\\MVC\\TController');
-define('DEFAULT_PARTIAL_CONTROLLER', ROOT_NAMESPACE . '\\MVC\\TPartialController');
-define('DEFAULT_CONTROL', ROOT_NAMESPACE . '\\Web\\UI\\TControl');
-define('DEFAULT_PARTIAL_CONTROL', ROOT_NAMESPACE . '\\Web\\UI\\TPartialControl');
+define('DEFAULT_MODEL', ROOT_NAMESPACE . '\\MVC\\Model');
+define('DEFAULT_CONTROLLER', ROOT_NAMESPACE . '\\MVC\\Controller');
+define('DEFAULT_PARTIAL_CONTROLLER', ROOT_NAMESPACE . '\\MVC\\PartialController');
+define('DEFAULT_CONTROL', ROOT_NAMESPACE . '\\Web\\UI\\Control');
+define('DEFAULT_PARTIAL_CONTROL', ROOT_NAMESPACE . '\\Web\\UI\\PartialControl');
 
 define('CONTROLLER', 'TController');
 define('PARTIAL_CONTROLLER', 'TPartialController');
@@ -167,9 +167,9 @@ define('OPEN_VAR', '{{');
 define('CLOSE_VAR', '}}');
 
 /*
-* define('CONTROL_ADDITIONS', PHP_EOL . "\tpublic function createObjects() {" . PHP_EOL . CREATIONS_PLACEHOLDER . PHP_EOL . "\t}" . PHP_EOL . PHP_EOL . "\tpublic function declareObjects() {" . PHP_EOL . ADDITIONS_PLACEHOLDER . PHP_EOL . "\t}" . PHP_EOL . PHP_EOL . "\tpublic function afterBindingObjects() {" . PHP_EOL . AFTERBINDING_PLACEHOLDER . PHP_EOL . "\t}" . PHP_EOL . PHP_EOL . "\tpublic function displayHtml() {" . PHP_EOL . "?>" . PHP_EOL . HTML_PLACEHOLDER . PHP_EOL . "<?php" . PHP_EOL . "\t}" . PHP_EOL . '}' . PHP_EOL);
+* define('CONTROL_ADDITIONS', PHP_EOL . "\public function createObjects() {" . PHP_EOL . CREATIONS_PLACEHOLDER . PHP_EOL . "\t}" . PHP_EOL . PHP_EOL . "\public function declareObjects() {" . PHP_EOL . ADDITIONS_PLACEHOLDER . PHP_EOL . "\t}" . PHP_EOL . PHP_EOL . "\public function afterBindingObjects() {" . PHP_EOL . AFTERBINDING_PLACEHOLDER . PHP_EOL . "\t}" . PHP_EOL . PHP_EOL . "\public function displayHtml() {" . PHP_EOL . "?>" . PHP_EOL . HTML_PLACEHOLDER . PHP_EOL . "<?php" . PHP_EOL . "\t}" . PHP_EOL . '}' . PHP_EOL);
 */
-define('CONTROL_ADDITIONS', PHP_EOL . "\tpublic function createObjects() : void {" . PHP_EOL . CREATIONS_PLACEHOLDER . PHP_EOL . "\t}" . PHP_EOL . PHP_EOL . "\tpublic function declareObjects() : void {" . PHP_EOL . ADDITIONS_PLACEHOLDER . PHP_EOL . "\t}" . PHP_EOL . PHP_EOL . "\tpublic function displayHtml() : void {" . PHP_EOL . "?>" . PHP_EOL . HTML_PLACEHOLDER . PHP_EOL . "<?php" . PHP_EOL . "\t}" . PHP_EOL . '}' . PHP_EOL);
+define('CONTROL_ADDITIONS', PHP_EOL . "\public function createObjects() : void {" . PHP_EOL . CREATIONS_PLACEHOLDER . PHP_EOL . "\t}" . PHP_EOL . PHP_EOL . "\public function declareObjects() : void {" . PHP_EOL . ADDITIONS_PLACEHOLDER . PHP_EOL . "\t}" . PHP_EOL . PHP_EOL . "\public function displayHtml() : void {" . PHP_EOL . "?>" . PHP_EOL . HTML_PLACEHOLDER . PHP_EOL . "<?php" . PHP_EOL . "\t}" . PHP_EOL . '}' . PHP_EOL);
 define('PHX_SQL_LIMIT', '<phx:sql_limit />');
 
 define('RETURN_CODE', 1);

@@ -1,33 +1,17 @@
 <?php
-/*
- * Copyright (C) 2020 David Blanchard
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 namespace Reed\Template;
 
-use Reed\Cache\TCache;
-use Reed\Core\TObject;
-use Reed\Registry\TRegistry;
-use Reed\Web\IWebObject;
-use Reed\Web\UI\TCustomControl;
-use Reed\Xml\TXmlDocument;
+use Reed\Cache\Cache;
+use FunCom\Element;
+use Reed\Registry\Registry;
+use Reed\Web\UI\CodeGeneratorTrait;
+use Reed\Web\UI\CustomControl;
+use Reed\Web\WebObjectInterface;
+use Reed\Xml\XmlDocument;
 
-abstract class TCustomTemplate extends TCustomControl
+abstract class CustomTemplate extends CustomControl
 {
-    use \Reed\Web\UI\TCodeGenerator {
+    use CodeGeneratorTrait {
         writeDeclarations as private;
         writeHTML as private;
     }
@@ -50,7 +34,7 @@ abstract class TCustomTemplate extends TCustomControl
     protected $engineIsTwig = false;
     protected $dictionary = [];
 
-    function __construct(IWebObject $parent, array $dictionary)
+    function __construct(WebObjectInterface $parent, array $dictionary)
     {
         parent::__construct($parent);
 
@@ -60,7 +44,7 @@ abstract class TCustomTemplate extends TCustomControl
 
         $this->dictionary = $dictionary;
         $uid = $this->getUID();
-        TRegistry::write('template', $uid, $dictionary);
+        Registry::write('template', $uid, $dictionary);
     }
 
     function isFatherTemplate(): bool
@@ -141,56 +125,28 @@ abstract class TCustomTemplate extends TCustomControl
 
     function parse(): bool
     {
-        $baseViewDir = SITE_ROOT;
 
-        while (empty($this->getViewHtml())) {
-            if (file_exists(SRC_ROOT . $this->viewFileName) && !empty($this->viewFileName)) {
-                // self::getLogger()->debug('PARSE SRC ROOT FILE : ' . $this->viewFileName, __FILE__, __LINE__);
-
-                $baseViewDir = SRC_ROOT;
-                $this->viewHtml = file_get_contents($baseViewDir . $this->viewFileName);
-
-                continue;
-            }
-            if (file_exists(SITE_ROOT . $this->viewFileName) && !empty($this->viewFileName)) {
-                // self::getLogger()->debug('PARSE SITE ROOT FILE : ' . $this->viewFileName, __FILE__, __LINE__);
-
-                $this->viewHtml = file_get_contents($baseViewDir . $this->viewFileName);
-
-                continue;
-            }
-
-            if (SITE_ROOT . $this->getDirName() . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->viewName . PREHTML_EXTENSION == $this->getPath()) {
-
-                $this->viewFileName = $this->getPath();
-                if ($this->viewFileName[0] == '@') {
-                    $this->viewFileName = str_replace("@" . DIRECTORY_SEPARATOR, '', $this->viewFileName);
-                }
-                $this->viewHtml = file_get_contents($baseViewDir . $this->viewFileName);
-
-                continue;
-            }
-
-            break;
-        }
+        $baseViewDir = SRC_ROOT;
 
         $fullViewDir = $baseViewDir . pathinfo($this->viewFileName, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR;
         
+        $this->viewHtml = file_get_contents($fullViewDir . $this->viewName . PREHTML_EXTENSION);
+
         $head = $this->getStyleSheetTag();
         $script = $this->getScriptTag();
 
         if ($this->isFatherTemplate()) {
             if ($head !== null) {
-                TRegistry::push($this->getFatherUID(), 'head', $head);
+                Registry::push($this->getFatherUID(), 'head', $head);
                 $this->appendToHead($head, $this->viewHtml);
             }
             if ($script !== null) {
-                TRegistry::push($this->getFatherUID(), 'scripts', $script);
+                Registry::push($this->getFatherUID(), 'scripts', $script);
                 $this->appendToBody($script, $this->viewHtml);
             }
         }
 
-        $doc = new TXmlDocument($this->viewHtml);
+        $doc = new XmlDocument($this->viewHtml);
         $doc->matchAll();
 
         $firstMatch = $doc->getNextMatch();
@@ -200,7 +156,7 @@ abstract class TCustomTemplate extends TCustomControl
             $masterViewName = pathinfo($masterFilename, PATHINFO_FILENAME);
             $masterHtml = file_get_contents($fullViewDir . $masterFilename);
 
-            $masterDoc = new TXmlDocument($masterHtml);
+            $masterDoc = new XmlDocument($masterHtml);
             $masterDoc->matchAll();
 
             $this->viewHtml = $masterDoc->replaceMatches($doc, $this->viewHtml);
@@ -215,7 +171,7 @@ abstract class TCustomTemplate extends TCustomControl
                 $this->appendToBody($masterScript, $this->viewHtml);
             }
 
-            $doc = new TXmlDocument($this->viewHtml);
+            $doc = new XmlDocument($this->viewHtml);
             $doc->matchAll();
 
         }
@@ -228,14 +184,14 @@ abstract class TCustomTemplate extends TCustomControl
             $this->viewHtml = $this->writeHTML($doc, $this);
         }
 
-        TRegistry::setHtml($this->getUID(), $this->viewHtml);
+        Registry::setHtml($this->getUID(), $this->viewHtml);
 
-        if (!TRegistry::exists('code', $this->getUID())) {
+        if (!Registry::exists('code', $this->getUID())) {
             self::getLogger()->debug('NO NEED TO WRITE CODE: ' . $this->controllerFileName, __FILE__, __LINE__);
             return false;
         }
 
-        $code = TRegistry::getCode($this->getUID());
+        $code = Registry::getCode($this->getUID());
         // We store the parsed code in a file so that we know it's already parsed on next request.
         $code = str_replace(CREATIONS_PLACEHOLDER, $this->creations, $code);
         $code = str_replace(ADDITIONS_PLACEHOLDER, $this->additions, $code);
@@ -251,7 +207,7 @@ abstract class TCustomTemplate extends TCustomControl
             if (!$this->isFatherTemplate()) {
                 file_put_contents($this->getCacheFileName(), $code);
             }
-            TRegistry::setCode($this->getUID(), $code);
+            Registry::setCode($this->getUID(), $code);
         }
 
         $this->engineIsReed = true;
@@ -299,8 +255,8 @@ abstract class TCustomTemplate extends TCustomControl
             $isInternal = $this->isInternalComponent();
         }
 
-        $cacheJsFilename = TCache::cacheJsFilenameFromView($viewName, $isInternal);
-        $script = "<script src='" . TCache::absoluteURL($cacheJsFilename) . "'></script>" . PHP_EOL;
+        $cacheJsFilename = Cache::cacheJsFilenameFromView($viewName, $isInternal);
+        $script = "<script src='" . Cache::absoluteURL($cacheJsFilename) . "'></script>" . PHP_EOL;
 
         $ok = $this->safeCopy($jsControllerFileName, $cacheJsFilename);
 
@@ -324,8 +280,8 @@ abstract class TCustomTemplate extends TCustomControl
             $isInternal = $this->isInternalComponent();
         }
 
-        $cacheCssFilename = TCache::cacheCssFilenameFromView($viewName, $isInternal);
-        $head = "<link rel='stylesheet' href='" . TCache::absoluteURL($cacheCssFilename) . "' />" . PHP_EOL;
+        $cacheCssFilename = Cache::cacheCssFilenameFromView($viewName, $isInternal);
+        $head = "<link rel='stylesheet' href='" . Cache::absoluteURL($cacheCssFilename) . "' />" . PHP_EOL;
 
         $ok = $this->safeCopy($cssFileName, $cacheCssFilename);
 
@@ -358,7 +314,7 @@ abstract class TCustomTemplate extends TCustomControl
      *                    RETURN_CODE : ...
      * @return boolean
      */
-    public static function includeTemplateClass(TCustomTemplate $template, $params = 0): ?array
+    public static function includeTemplateClass(CustomTemplate $template, $params = 0): ?array
     {
         $filename = $template->getControllerFileName();
         $classFilename = SRC_ROOT . $filename;
@@ -369,7 +325,7 @@ abstract class TCustomTemplate extends TCustomControl
             return null;
         }
 
-        list($namespace, $className, $code) = TObject::getClassDefinition($classFilename);
+        list($namespace, $className, $code) = Element::getClassDefinition($classFilename);
 
         $fqClassName = trim($namespace) . "\\" . trim($className);
 
@@ -377,7 +333,7 @@ abstract class TCustomTemplate extends TCustomControl
 
         if (isset($params) && ($params && RETURN_CODE === RETURN_CODE)) {
             $code = substr(trim($code), 0, -2) . PHP_EOL . CONTROL_ADDITIONS;
-            TRegistry::setCode($template->getUID(), $code);
+            Registry::setCode($template->getUID(), $code);
         }
 
         self::getLogger()->debug(__METHOD__ . '::' . $filename, __FILE__, __LINE__);
@@ -393,27 +349,9 @@ abstract class TCustomTemplate extends TCustomControl
         return [$classFilename, $fqClassName, $code];
     }
 
-    public static function controllerTemplate(string $namespace, string $className, bool $isPartial): string
-    {
-        $partial = ($isPartial) ? 'Partial' : '';
 
-        $result = <<<CONTROLLER
-<?php
-namespace $namespace;
 
-use Reed\MVC\T{$partial}Controller;
-
-class $className extends T{$partial}Controller
-{
-    
-       
-}
-CONTROLLER;
-
-        return $result;
-    }
-
-    public static function import(TCustomControl $ctrl, string $className): bool
+    public static function import(CustomControl $ctrl, string $className): bool
     {
         if (!isset($className)) {
             $className = $ctrl->getClassName();
@@ -428,11 +366,11 @@ CONTROLLER;
         $cacheJsFilename = '';
         $viewName = '';
 
-        $info = TRegistry::classInfo($className);
+        $info = Registry::classInfo($className);
         self::getLogger()->dump('CLASS INFO::' . $className, $info, __FILE__, __LINE__);
 
         if ($info !== null) {
-            $viewName = TObject::innerClassNameToFilename($className);
+            $viewName = Element::innerClassNameToFilename($className);
             $path = PHINK_VENDOR_LIB . $info->path;
 
             if ($info->path[0] == '@') {
@@ -442,17 +380,17 @@ CONTROLLER;
                 $path = str_replace("~" . DIRECTORY_SEPARATOR, PHINK_VENDOR_WIDGETS, $info->path);
             }
 
-            $cacheFilename = TCache::cacheFilenameFromView($viewName, $ctrl->isInternalComponent());
+            $cacheFilename = Cache::cacheFilenameFromView($viewName, $ctrl->isInternalComponent());
         }
         if ($info === null) {
             $viewName = self::userClassNameToFilename($className);
 
             //$classFilename = 'app' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR . $className . CLASS_EXTENSION;
-            $cacheFilename = TCache::cacheFilenameFromView($viewName, $ctrl->isInternalComponent());
+            $cacheFilename = Cache::cacheFilenameFromView($viewName, $ctrl->isInternalComponent());
             self::getLogger()->debug('CACHED JS FILENAME: ' . $cacheJsFilename, __FILE__, __LINE__);
         }
-        $cacheJsFilename = TCache::cacheJsFilenameFromView($viewName, $ctrl->isInternalComponent());
-        $cacheCssFilename = TCache::cacheCssFilenameFromView($viewName, $ctrl->isInternalComponent());
+        $cacheJsFilename = Cache::cacheJsFilenameFromView($viewName, $ctrl->isInternalComponent());
+        $cacheCssFilename = Cache::cacheCssFilenameFromView($viewName, $ctrl->isInternalComponent());
 
         if (file_exists(SRC_ROOT . $cacheFilename)) {
 
@@ -471,22 +409,22 @@ CONTROLLER;
         }
 
         $include = null;
-        //            $modelClass = ($include = TAutoloader::includeModelByName($viewName)) ? $include['type'] : DEFALT_MODEL;
+        //            $modelClass = ($include = Autoloader::includeModelByName($viewName)) ? $include['type'] : DEFALT_MODEL;
         //            include SRC_ROOT . $include['file'];
         //            $model = new $modelClass();
 
 
         self::getLogger()->debug('PARSING ' . $viewName . '!!!');
-        $view = new TPartialTemplate($ctrl, $className);
+        $view = new PartialTemplate($ctrl, $className);
 
         if ($info !== null) {
-            list($file, $type, $code) = TCustomTemplate::includeInnerClass($view, $info);
+            list($file, $type, $code) = CustomTemplate::includeInnerClass($view, $info);
             $view->getCacheFilename();
         } else {
-            list($file, $type, $code) = TCustomTemplate::includeTemplateClass($view, RETURN_CODE);
+            list($file, $type, $code) = CustomTemplate::includeTemplateClass($view, RETURN_CODE);
         }
-        TRegistry::setCode($view->getUID(), $code);
-        self::getLogger()->debug($view->getControllerFileName() . ' IS REGISTERED : ' . (TRegistry::exists('code', $view->getControllerFileName()) ? 'TRUE' : 'FALSE'), __FILE__, __LINE__);
+        Registry::setCode($view->getUID(), $code);
+        self::getLogger()->debug($view->getControllerFileName() . ' IS REGISTERED : ' . (Registry::exists('code', $view->getControllerFileName()) ? 'TRUE' : 'FALSE'), __FILE__, __LINE__);
         self::getLogger()->debug('CONTROLLER FILE NAME OF THE PARSED VIEW: ' . $view->getControllerFileName());
         $view->parse();
 
@@ -498,36 +436,13 @@ CONTROLLER;
         return true;
     }
 
-    public static function includeDefaultController(string $namespace, string $className): array
-    {
-        $file = '';
-        $type = '';
-        $code = '';
-        $type = DEFAULT_CONTROLLER;
-        $code = self::controllerTemplate($namespace, $className);
-        $code = substr(trim($code), 0, -2) . CONTROL_ADDITIONS;
 
-        return [$file, $type, $code];
-    }
-
-    public static function includeDefaultPartialController(string $namespace, string $className): array
-    {
-        $file = '';
-        $type = '';
-        $code = '';
-        $type = DEFAULT_PARTIAL_CONTROLLER;
-        $code = self::partialControllerTemplate($namespace, $className);
-        $code = substr(trim($code), 0, -2) . CONTROL_ADDITIONS;
-
-        return [$file, $type, $code];
-    }
-
-    private static function includeInnerClass(TCustomTemplate $view, object $info, bool $withCode = true): array
+    private static function includeInnerClass(CustomTemplate $view, object $info, bool $withCode = true): array
     {
         $className = $view->getClassName();
         $viewName = $view->getViewName();
 
-        // $filename = $info->path . 'app' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR  . \Reed\TAutoloader::innerClassNameToFilename($className) . CLASS_EXTENSION;
+        // $filename = $info->path . 'app' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR  . \Reed\Autoloader::innerClassNameToFilename($className) . CLASS_EXTENSION;
         // $filename = $view->getControllerFileName();
         $filename = $info->path . 'app' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR  . $viewName . CLASS_EXTENSION;
 
@@ -542,8 +457,8 @@ CONTROLLER;
         $code = file_get_contents($filename, FILE_USE_INCLUDE_PATH);
 
         if ($withCode) {
-            $code = substr(trim($code), 0, -2) . PHP_EOL . CONTROL_ADDITIONS;
-            TRegistry::setCode($view->getUID(), $code);
+            $code = substr(rim($code), 0, -2) . PHP_EOL . CONTROL_ADDITIONS;
+            Registry::setCode($view->getUID(), $code);
         }
 
         return [$filename, $info->namespace . '\\' . $className, $code];
